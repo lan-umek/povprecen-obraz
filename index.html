@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="sl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Povprečen obraz – selfi</title>
+<style>
+  :root{
+    --bg:#f4f1ec; --card:#fffdf9; --ink:#1d1c1a; --muted:#6b665e; --line:#e2dcd2;
+    --acc:#1f6f78; --acc-ink:#fff; --warn:#a4452c; --ok:#2f7d4a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#15171a; --card:#1e2125; --ink:#ece8e1; --muted:#9a958c; --line:#30343a; --acc:#4fb3bd; --acc-ink:#0c1214; --warn:#e3876b; --ok:#6cc48d; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+  main{max-width:520px;margin:0 auto;padding:20px 16px 48px}
+  h1{font-size:1.6rem;line-height:1.2;margin:.2em 0 .1em;letter-spacing:-.01em}
+  .pod{color:var(--muted);margin:0 0 18px}
+  .kartica{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin:14px 0}
+  .kartica h2{font-size:1.05rem;margin:0 0 8px}
+  ul{margin:0;padding-left:1.1em} li{margin:.25em 0}
+  .opozorilo{border-left:4px solid var(--warn);padding:8px 12px;background:color-mix(in srgb,var(--warn) 10%,transparent);border-radius:6px;margin-top:12px}
+  label.izbira{display:flex;gap:12px;align-items:flex-start;padding:10px 0;cursor:pointer}
+  label.izbira input{width:22px;height:22px;margin-top:2px;accent-color:var(--acc);flex:none}
+  .skupine{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .skupine button{padding:12px 6px;border-radius:12px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:.95rem;cursor:pointer}
+  .skupine button[aria-pressed=true]{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,transparent);font-weight:600}
+  .gumb{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border-radius:14px;border:0;background:var(--acc);color:var(--acc-ink);font:600 1.1rem system-ui,sans-serif;cursor:pointer;text-decoration:none}
+  .gumb[disabled],.gumb.onemogocen{opacity:.4;pointer-events:none}
+  .gumb.drugi{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+  .vrsta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .predogled{display:block;width:min(300px,100%);aspect-ratio:1;margin:6px auto 4px;border-radius:14px}
+  .napaka{color:var(--warn);font-weight:600}
+  .ok{color:var(--ok)}
+  .skrito{display:none!important}
+  .vrtavka{width:36px;height:36px;border:4px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:v 1s linear infinite;margin:14px auto}
+  @keyframes v{to{transform:rotate(360deg)}}
+  .sredina{text-align:center}
+  .majhno{font-size:.88rem;color:var(--muted)}
+  input[type=text]{width:100%;padding:12px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:inherit;text-transform:uppercase;letter-spacing:.15em}
+  a{color:var(--acc)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Povprečen obraz</h1>
+  <p class="pod">Kako izgleda povprečen obraz naše predavalnice? Prispevaj svoj selfi.</p>
+
+  <!-- brez kode seje -->
+  <section id="brezSeje" class="kartica skrito">
+    <h2>Vnesi kodo seje</h2>
+    <p class="majhno">Kodo vidiš na prosojnici pod QR kodo.</p>
+    <input id="vnosKode" type="text" maxlength="12" autocomplete="off">
+    <div style="height:10px"></div>
+    <button class="gumb" id="potrdiKodo">Naprej</button>
+  </section>
+
+  <!-- korak 1 -->
+  <section id="korak1" class="skrito">
+    <div class="kartica">
+      <h2>Kaj se zgodi s tvojo sliko?</h2>
+      <ul>
+        <li>Fotografija se obdela <b>na tvojem telefonu</b>. Poslan je le izrez obraza (300 × 300 točk), brez ozadja in brez podatkov o lokaciji.</li>
+        <li>Izreze lahko prebere le predavateljeva stran. Sošolci do tvoje slike ne morejo dostopati.</li>
+        <li>Ime se ne shranjuje.</li>
+        <li>Vse slike se izbrišejo ob koncu predavanja, <b>najpozneje pa samodejno v 3 urah</b>.</li>
+        <li>Sodelovanje je prostovoljno.</li>
+      </ul>
+      <div class="opozorilo"><b>Pozor:</b> tvoj obraz bo lahko <b>med predavanjem prikazan na projektorju</b> (galerija, primerjave, kviz), tako da ga bodo videli tudi sošolci.</div>
+      <label class="izbira"><input type="checkbox" id="soglasje"><span>Razumem in se strinjam, da se moj selfi uporabi za to predavanje, kot je opisano zgoraj.</span></label>
+    </div>
+    <div class="kartica">
+      <h2>Kateri skupini se prišteješ?</h2>
+      <p class="majhno" style="margin-top:0">Uporabi se za primerjavo povprečij.</p>
+      <div class="skupine" role="group">
+        <button data-s="m" aria-pressed="false">Študent</button>
+        <button data-s="z" aria-pressed="false">Študentka</button>
+        <button data-s="x" aria-pressed="false">Ne želim povedati</button>
+      </div>
+    </div>
+    <label class="gumb onemogocen" id="gumbSlikaj" for="kamera">📷 Posnemi selfi</label>
+    <input id="kamera" type="file" accept="image/*" capture="user" class="skrito">
+    <p class="majhno sredina" style="margin-top:10px">Poglej naravnost v kamero, brez očal za sonce, pri dobri svetlobi.</p>
+  </section>
+
+  <!-- obdelava -->
+  <section id="obdelava" class="kartica sredina skrito">
+    <div class="vrtavka"></div>
+    <p id="obdelavaBesedilo">Iščem obraz …</p>
+  </section>
+
+  <!-- korak 2 -->
+  <section id="korak2" class="kartica skrito">
+    <h2>To bo poslano</h2>
+    <canvas id="predogled" class="predogled" width="300" height="300"></canvas>
+    <p class="majhno sredina">Obraz je poravnan po očeh, tako kot vsi ostali.</p>
+    <div class="vrsta">
+      <label class="gumb drugi" for="kamera">Ponovi</label>
+      <button class="gumb" id="poslji">Pošlji</button>
+    </div>
+  </section>
+
+  <!-- konec -->
+  <section id="konec" class="kartica sredina skrito">
+    <p style="font-size:3rem;margin:.1em 0">✓</p>
+    <h2 class="ok">Hvala, selfi je poslan!</h2>
+    <p>Poglej na projektor – tvoj obraz je zdaj del povprečja.</p>
+    <p class="majhno"><a href="#" id="seEnkrat">Pošlji še eno sliko</a> (npr. če je bila prva neuspešna)</p>
+  </section>
+
+  <p id="sporocilo" class="napaka sredina"></p>
+</main>
+
+<script type="module">
+// Povezava na Supabase. Oba podatka sta javna (namenjena brskalniku);
+// zaščito zagotavljajo pravila v bazi (supabase_nastavitev.sql).
+const SUPABASE_URL = "https://nzgjwsenyupendpzivfm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_QdGFDGSwDkfGBipDiIrBrA_i7k5hWhk";
+
+// Skupno jedro: zaznava obraza, poravnava, triangulacija in upogibanje (WebGL).
+
+const S = 300;                 // velikost poravnanega izreza (px)
+const OKO_RAZDALJA = 0.30 * S; // razdalja med očesoma po poravnavi
+const OKO_SREDINA = [0.5 * S, 0.40 * S];
+
+// Izbor 90 od 478 MediaPipe točk.
+const OVAL = [10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377,
+  152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109];
+const OBRVI = [70, 63, 105, 66, 107, 336, 296, 334, 293, 300];
+const NOS = [168, 6, 197, 195, 5, 4, 1, 2, 98, 327, 64, 294];
+const OKO_A = [33, 160, 158, 133, 153, 144];
+const OKO_B = [362, 385, 387, 263, 373, 380];
+const USTNICE = [61, 39, 37, 0, 267, 269, 291, 321, 314, 17, 84, 91, 78, 82, 13, 312, 308, 317, 14, 87];
+const TOCKE = [...OVAL, ...OBRVI, ...NOS, ...OKO_A, ...OKO_B, ...USTNICE];
+const off = (arr) => TOCKE.indexOf(arr[0]);
+const IDX_OVAL = OVAL.map((_, i) => i);
+const IDX_OKO_A = OKO_A.map((_, i) => off(OKO_A) + i);
+const IDX_OKO_B = OKO_B.map((_, i) => off(OKO_B) + i);
+const IDX_NOS_KONICA = TOCKE.indexOf(1);
+
+// Robne točke (vogali in sredine robov), ki ostanejo pri upogibanju na mestu.
+const ROB = [[0, 0], [S / 2, 0], [S, 0], [S, S / 2], [S, S], [S / 2, S], [0, S], [0, S / 2]];
+
+const povp = (pts, idx) => {
+  let x = 0, y = 0;
+  for (const i of idx) { x += pts[i][0]; y += pts[i][1]; }
+  return [x / idx.length, y / idx.length];
+};
+
+// ── MediaPipe (naloži se šele, ko je potreben) ────────────────────────────
+const MP = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+let _lm = null;
+function naloziZaznavo() {
+  if (!_lm) {
+    _lm = (async () => {
+      const { FaceLandmarker, FilesetResolver } = await import(`${MP}/vision_bundle.mjs`);
+      const fs = await FilesetResolver.forVisionTasks(`${MP}/wasm`);
+      return FaceLandmarker.createFromOptions(fs, {
+        baseOptions: { modelAssetPath: location.protocol === "file:" ? "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task" : new URL("face_landmarker.task", location.href).href, delegate: "CPU" },
+        runningMode: "IMAGE",
+        numFaces: 2,
+      });
+    })();
+    _lm.catch(() => { _lm = null; });
+  }
+  return _lm;
+}
+
+// Datoteka → platno (največ 1280 px po daljši stranici).
+function datotekaVPlatno(file, maks = 1280) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, maks / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.naturalWidth * k);
+      c.height = Math.round(img.naturalHeight * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Slike ni bilo mogoče odpreti.")); };
+    img.src = url;
+  });
+}
+
+// Zazna obraz na platnu in vrne poravnan izrez ali {napaka}.
+async function zaznajInPoravnaj(platno) {
+  const lm = await naloziZaznavo();
+  const res = lm.detect(platno);
+  const obrazi = res.faceLandmarks || [];
+  if (obrazi.length === 0) return { napaka: "Na sliki ni bilo mogoče najti obraza. Poskusi pri boljši svetlobi in poglej naravnost v kamero." };
+  if (obrazi.length > 1) return { napaka: "Na sliki je več obrazov. Na selfiju naj bo samo tvoj obraz." };
+  const f = obrazi[0], W = platno.width, H = platno.height;
+  const pts = TOCKE.map((i) => [f[i].x * W, f[i].y * H]);
+  const a = povp(pts, IDX_OKO_A), b = povp(pts, IDX_OKO_B);
+  const iod = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  if (iod < 25) return { napaka: "Obraz je premajhen. Telefon približaj obrazu." };
+  const sred = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const nos = pts[IDX_NOS_KONICA];
+  // nos glede na os med očesoma (zasuk glave levo/desno)
+  const ux = (b[0] - a[0]) / iod, uy = (b[1] - a[1]) / iod;
+  const odmik = ((nos[0] - sred[0]) * ux + (nos[1] - sred[1]) * uy) / iod;
+  if (Math.abs(odmik) > 0.22) return { napaka: "Glava je preveč obrnjena vstran. Poglej naravnost v kamero." };
+  return poravnaj(platno, pts);
+}
+
+// Podobnostna transformacija: oči na fiksni položaj, izrez S×S.
+function poravnaj(vir, pts) {
+  const a = povp(pts, IDX_OKO_A), b = povp(pts, IDX_OKO_B);
+  // oko A naj bo levo na sliki
+  let L = a, R = b;
+  if (a[0] > b[0]) { L = b; R = a; }
+  const dx = R[0] - L[0], dy = R[1] - L[1];
+  const s = OKO_RAZDALJA / Math.hypot(dx, dy);
+  const ang = -Math.atan2(dy, dx);
+  const cs = Math.cos(ang) * s, sn = Math.sin(ang) * s;
+  const cx = (L[0] + R[0]) / 2, cy = (L[1] + R[1]) / 2;
+  const [tx, ty] = OKO_SREDINA;
+  const e = tx - cs * cx + sn * cy, f = ty - sn * cx - cs * cy;
+  const c = document.createElement("canvas");
+  c.width = c.height = S;
+  const g = c.getContext("2d");
+  g.fillStyle = "#808080";
+  g.fillRect(0, 0, S, S);
+  g.setTransform(cs, sn, -sn, cs, e, f);
+  g.imageSmoothingQuality = "high";
+  g.drawImage(vir, 0, 0);
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  const nove = pts.map(([x, y]) => [cs * x - sn * y + e, sn * x + cs * y + f]);
+  return { platno: c, tocke: nove };
+}
+
+// ── Delaunayeva triangulacija (Bowyer–Watson) ─────────────────────────────
+function delaunay(P) {
+  const n = P.length;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [x, y] of P) { minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); }
+  const d = Math.max(maxX - minX, maxY - minY) * 20, mx = (minX + maxX) / 2, my = (minY + maxY) / 2;
+  const T = P.concat([[mx - d, my - d], [mx, my + d], [mx + d, my - d]]);
+  const krog = (i, j, k) => {
+    const [ax, ay] = T[i], [bx, by] = T[j], [cx, cy] = T[k];
+    const D = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+    const ux = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / D;
+    const uy = ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / D;
+    return [ux, uy, (ax - ux) ** 2 + (ay - uy) ** 2];
+  };
+  let tri = [[n, n + 1, n + 2, krog(n, n + 1, n + 2)]];
+  for (let p = 0; p < n; p++) {
+    const [px, py] = T[p];
+    const slabi = [], dobri = [];
+    for (const t of tri) {
+      const [ux, uy, r2] = t[3];
+      ((px - ux) ** 2 + (py - uy) ** 2 < r2 ? slabi : dobri).push(t);
+    }
+    const robovi = new Map();
+    for (const t of slabi) {
+      for (const [u, v] of [[t[0], t[1]], [t[1], t[2]], [t[2], t[0]]]) {
+        const k = u < v ? u + "," + v : v + "," + u;
+        robovi.set(k, robovi.has(k) ? null : [u, v]);
+      }
+    }
+    tri = dobri;
+    for (const e of robovi.values()) {
+      if (!e) continue;
+      const kr = krog(e[0], e[1], p);
+      if (isFinite(kr[2])) tri.push([e[0], e[1], p, kr]);
+    }
+  }
+  return tri.filter((t) => t[0] < n && t[1] < n && t[2] < n).map((t) => [t[0], t[1], t[2]]);
+}
+
+// ── Upogibanje (piecewise affine warp) z WebGL ────────────────────────────
+class Upogib {
+  constructor(velikost = S) {
+    this.N = velikost;
+    this.c = document.createElement("canvas");
+    this.c.width = this.c.height = velikost;
+    const gl = this.c.getContext("webgl", { preserveDrawingBuffer: true, premultipliedAlpha: false, antialias: false });
+    if (!gl) throw new Error("Brskalnik ne podpira WebGL.");
+    this.gl = gl;
+    const sh = (tip, src) => { const s = gl.createShader(tip); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+    const pr = gl.createProgram();
+    gl.attachShader(pr, sh(gl.VERTEX_SHADER,
+      "attribute vec2 p;attribute vec2 uv;uniform float n;varying vec2 v;void main(){v=uv;gl_Position=vec4(p.x/n*2.0-1.0,p.y/n*2.0-1.0,0.0,1.0);}"));
+    gl.attachShader(pr, sh(gl.FRAGMENT_SHADER,
+      "precision highp float;varying vec2 v;uniform sampler2D t;void main(){gl_FragColor=texture2D(t,v);}"));
+    gl.linkProgram(pr);
+    gl.useProgram(pr);
+    this.aP = gl.getAttribLocation(pr, "p");
+    this.aUV = gl.getAttribLocation(pr, "uv");
+    gl.uniform1f(gl.getUniformLocation(pr, "n"), S);
+    this.bP = gl.createBuffer();
+    this.bUV = gl.createBuffer();
+    gl.viewport(0, 0, velikost, velikost);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  }
+  tekstura(vir, w = S, h = S) {
+    const gl = this.gl, t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    if (vir instanceof Uint8Array || vir instanceof Uint8ClampedArray) {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+        vir instanceof Uint8Array ? vir : new Uint8Array(vir.buffer, vir.byteOffset, vir.length));
+    } else {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, vir);
+    }
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return t;
+  }
+  pobrisi(t) { this.gl.deleteTexture(t); }
+  // Teksturo z oblike `iz` preslika na obliko `v` (obe brez robnih točk); vrne RGBA pikslov N×N.
+  upogni(tex, iz, v, tri) {
+    const gl = this.gl;
+    const A = iz.concat(ROB), B = v.concat(ROB);
+    const pos = new Float32Array(tri.length * 6), uv = new Float32Array(tri.length * 6);
+    let k = 0;
+    for (const t of tri) for (const i of t) {
+      pos[k] = B[i][0]; uv[k] = A[i][0] / S; k++;
+      pos[k] = B[i][1]; uv[k] = A[i][1] / S; k++;
+    }
+    gl.clearColor(0.5, 0.5, 0.5, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.bP);
+    gl.bufferData(gl.ARRAY_BUFFER, pos, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(this.aP);
+    gl.vertexAttribPointer(this.aP, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.bUV);
+    gl.bufferData(gl.ARRAY_BUFFER, uv, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(this.aUV);
+    gl.vertexAttribPointer(this.aUV, 2, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, tri.length * 3);
+    const out = new Uint8ClampedArray(this.N * this.N * 4);
+    gl.readPixels(0, 0, this.N, this.N, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(out.buffer));
+    return out;
+  }
+}
+
+// Pomožne funkcije za piksle
+function narisi(canvas, piksli, n = S) {
+  canvas.width = canvas.height = n;
+  canvas.getContext("2d").putImageData(new ImageData(piksli, n, n), 0, 0);
+}
+function povprecjeOblik(seznam) {
+  const m = seznam[0].map(() => [0, 0]);
+  for (const p of seznam) p.forEach(([x, y], i) => { m[i][0] += x; m[i][1] += y; });
+  return m.map(([x, y]) => [x / seznam.length, y / seznam.length]);
+}
+
+// ── stran ──
+
+const $ = (id) => document.getElementById(id);
+const pokazi = (...ids) => {
+  for (const id of ["brezSeje", "korak1", "obdelava", "korak2", "konec"]) $(id).classList.toggle("skrito", !ids.includes(id));
+};
+const sporoci = (t) => { $("sporocilo").textContent = t || ""; };
+
+let seja = (new URLSearchParams(location.search).get("s") || "").trim().toUpperCase();
+let skupina = null, izrez = null;
+
+function zacni() {
+  if (!seja) { pokazi("brezSeje"); return; }
+  let poslano = false;
+  try { poslano = localStorage.getItem("poslano-" + seja) === "1"; } catch {}
+  pokazi(poslano ? "konec" : "korak1");
+  naloziZaznavo().catch(() => {}); // prednalaganje modela
+}
+$("potrdiKodo").onclick = () => {
+  const k = $("vnosKode").value.trim().toUpperCase();
+  if (!/^[A-Z0-9-]{3,12}$/.test(k)) { sporoci("Koda ni veljavna."); return; }
+  sporoci(""); seja = k;
+  history.replaceState(null, "", "?s=" + encodeURIComponent(k));
+  zacni();
+};
+
+function preveri() {
+  $("gumbSlikaj").classList.toggle("onemogocen", !($("soglasje").checked && skupina));
+}
+$("soglasje").onchange = preveri;
+document.querySelectorAll(".skupine button").forEach((b) => b.onclick = () => {
+  skupina = b.dataset.s;
+  document.querySelectorAll(".skupine button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+  preveri();
+});
+
+$("kamera").onchange = async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  sporoci(""); pokazi("obdelava");
+  $("obdelavaBesedilo").textContent = "Nalagam model za zaznavo obraza …";
+  try {
+    await naloziZaznavo();
+    $("obdelavaBesedilo").textContent = "Iščem obraz …";
+    const platno = await datotekaVPlatno(file);
+    const r = await zaznajInPoravnaj(platno);
+    if (r.napaka) { sporoci(r.napaka); pokazi("korak1"); return; }
+    izrez = r;
+    $("predogled").getContext("2d").drawImage(r.platno, 0, 0);
+    pokazi("korak2");
+  } catch (err) {
+    console.error(err);
+    sporoci("Obdelava ni uspela (" + (err.message || err) + "). Preveri povezavo in poskusi znova.");
+    pokazi("korak1");
+  }
+};
+
+$("poslji").onclick = async () => {
+  if (!izrez) return;
+  const gumb = $("poslji");
+  gumb.disabled = true; gumb.textContent = "Pošiljam …"; sporoci("");
+  try {
+    let q = 0.88, slika;
+    do { slika = izrez.platno.toDataURL("image/jpeg", q); q -= 0.1; } while (slika.length > 140000 && q > 0.3);
+    const tocke = izrez.tocke.map(([x, y]) => [Math.round(x * 10) / 10, Math.round(y * 10) / 10]);
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/prispevki`, {
+      method: "POST",
+      headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ seja, skupina, slika, tocke }),
+    });
+    if (!r.ok) throw new Error("strežnik je vrnil " + r.status);
+    try { localStorage.setItem("poslano-" + seja, "1"); } catch {}
+    izrez = null;
+    pokazi("konec");
+  } catch (err) {
+    console.error(err);
+    sporoci("Pošiljanje ni uspelo (" + (err.message || err) + "). Poskusi znova.");
+  } finally {
+    gumb.disabled = false; gumb.textContent = "Pošlji";
+  }
+};
+
+$("seEnkrat").onclick = (e) => { e.preventDefault(); pokazi("korak1"); };
+zacni();
+</script>
+</body>
+</html>

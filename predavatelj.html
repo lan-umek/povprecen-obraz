@@ -1,0 +1,1686 @@
+<!doctype html>
+<html lang="sl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Povprečen obraz – predavatelj</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+  :root[data-theme=dark]{
+    --bg:#121417; --panel:#1b1e23; --panel2:#23272d; --ink:#eeeae3; --muted:#9b968d; --line:#2f343b;
+    --acc:#4fb3bd; --acc-ink:#0b1416; --warn:#e3876b;
+    --m:#5aa9e6; --z:#f0a24a; --x:#a3a7ae;
+  }
+  :root[data-theme=light]{
+    --bg:#f3f0ea; --panel:#fffdf8; --panel2:#f0ebe2; --ink:#1c1b19; --muted:#6a655c; --line:#ddd6ca;
+    --acc:#1f6f78; --acc-ink:#fff; --warn:#a4452c;
+    --m:#2f6fb0; --z:#c26d10; --x:#7b7f86;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
+  button,select,input{font:inherit;color:inherit}
+  .gumb{padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;white-space:nowrap}
+  .gumb:hover{border-color:var(--acc)}
+  .gumb.glavni{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
+  .gumb.nevaren{border-color:var(--warn);color:var(--warn);background:transparent}
+  .gumb.nevaren.potrdi{background:var(--warn);color:#fff}
+  .gumb[disabled]{opacity:.45;pointer-events:none}
+  header{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  header h1{font-size:1.15rem;margin:0 12px 0 0;letter-spacing:-.01em}
+  .cip{padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:.9rem}
+  .cip b{letter-spacing:.12em}
+  .pika{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--muted);margin-right:6px;vertical-align:1px}
+  .pika.ok{background:#59c27e}.pika.err{background:var(--warn)}
+  .razmik{flex:1}
+  nav{display:flex;gap:4px;padding:8px 14px;border-bottom:1px solid var(--line);overflow-x:auto}
+  nav button{border:0;background:transparent;padding:8px 14px;border-radius:9px;cursor:pointer;color:var(--muted);font-weight:600;white-space:nowrap}
+  nav button[aria-selected=true]{background:var(--panel2);color:var(--ink);box-shadow:inset 0 -2px 0 var(--acc)}
+  main{flex:1;overflow:auto;padding:22px 26px 40px}
+  .zavihek{display:none}.zavihek.aktiven{display:block}
+  h2{font-size:1.7rem;margin:0 0 4px;letter-spacing:-.015em}
+  .uvod{color:var(--muted);max-width:70ch;margin:0 0 20px}
+  .plosca{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .mreza{display:grid;gap:18px}
+  canvas.obraz{display:block;width:min(100%, calc(100vh - 290px));min-width:120px;height:auto;aspect-ratio:1;border-radius:12px;background:var(--panel2);margin:0 auto}
+  canvas.matrika{display:block;width:min(100%, calc(100vh - 270px));aspect-ratio:1;height:auto;cursor:crosshair;border-radius:8px;background:var(--panel2)}
+  .oznaka{display:flex;justify-content:space-between;align-items:baseline;margin:10px 2px 0;gap:8px}
+  .oznaka b{font-size:1.15rem}
+  .muted{color:var(--muted)}
+  .prazno{padding:60px 20px;text-align:center;color:var(--muted);border:1.5px dashed var(--line);border-radius:16px}
+  .vrstica{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  input[type=range]{accent-color:var(--acc);width:100%}
+  .skrito{display:none!important}
+  /* zbiranje */
+  .zbiranje{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1fr);gap:24px;align-items:start}
+  .qr{background:#fff;border-radius:16px;padding:14px;max-width:440px}
+  .qr img{width:100%;image-rendering:pixelated;display:block}
+  .koda{font-size:2.6rem;font-weight:800;letter-spacing:.2em}
+  .stevec{font-size:4rem;font-weight:800;line-height:1}
+  .stena{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;margin-top:16px}
+  .stena img,.galerija img{width:100%;aspect-ratio:1;border-radius:8px;display:block;object-fit:cover}
+  .stena img{animation:pride .5s ease-out}
+  @keyframes pride{from{transform:scale(.6);opacity:0}}
+  .m{--g:var(--m)} .z{--g:var(--z)} .x{--g:var(--x)}
+  .rob{outline:3px solid var(--g);outline-offset:-3px}
+  .legenda span{display:inline-flex;align-items:center;gap:6px;margin-right:14px}
+  .legenda i{width:12px;height:12px;border-radius:3px;background:var(--g);display:inline-block}
+  /* galerija */
+  .galerija{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+  .galerija button{padding:0;border:0;background:none;cursor:pointer;border-radius:10px}
+  .galerija button:hover img{outline:3px solid var(--acc)}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:10;padding:20px}
+  .modal .plosca{max-width:min(92vw,980px);width:100%}
+  /* grafi */
+  svg.graf{width:100%;height:auto;display:block;overflow:visible}
+  svg.graf text{fill:var(--muted);font-size:12px}
+  svg.graf .os{stroke:var(--line)}
+  .trak{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+  .trak figure{margin:0;flex:none;width:96px;text-align:center;font-size:.8rem;color:var(--muted)}
+  .trak img{width:96px;height:96px;border-radius:8px;display:block;margin-bottom:4px}
+  .par{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:center}
+  .par img,.par canvas{width:100%;aspect-ratio:1;border-radius:10px;display:block}
+  /* zemljevid */
+  .zemljevid{position:relative;height:min(72vh,820px);border-radius:16px;background:var(--panel);border:1px solid var(--line);overflow:hidden}
+  .zemljevid img{position:absolute;width:58px;height:58px;border-radius:50%;margin:-29px 0 0 -29px;transition:left .25s linear,top .25s linear;box-shadow:0 0 0 3px var(--g)}
+  .zemljevid img:hover{z-index:5;transform:scale(2.2);transition:transform .15s}
+  .minigalerija{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 8px}
+  .minigalerija img{width:52px;height:52px;border-radius:8px;flex:none;cursor:pointer;opacity:.6}
+  .minigalerija img.izbran{opacity:1;outline:3px solid var(--acc);outline-offset:-1px}
+  img.zadnji{display:block;width:100%;aspect-ratio:1;border-radius:10px;outline:4px solid var(--g,var(--acc));outline-offset:-4px;background:var(--panel2)}
+  img.zadnji.novo{animation:pride .45s ease-out}
+  .vzorci{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:10px}
+  .vzorci canvas{width:100%;aspect-ratio:1;border-radius:10px;display:block}
+  .utez{display:grid;grid-template-columns:44px 1fr 64px;gap:10px;align-items:center;margin:5px 0}
+  .utez img{width:44px;height:44px;border-radius:6px}
+  .utez .trakU{height:14px;position:relative;background:var(--panel2);border-radius:3px}
+  .utez .trakU i{position:absolute;top:0;bottom:0;border-radius:3px}
+  /* prijava */
+  .prijava{max-width:420px;margin:8vh auto;padding:0 16px}
+  .prijava input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);margin:6px 0 12px}
+  .eigen{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .eigen figure{margin:0}
+  .eigen .dvojica{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+  .eigen canvas{width:100%;aspect-ratio:1;border-radius:8px;display:block}
+  .eigen figcaption{font-size:.85rem;color:var(--muted);margin-top:4px}
+  .drsniki label{display:grid;grid-template-columns:70px 1fr 48px;gap:10px;align-items:center;margin:6px 0}
+  @media (max-width:900px){ .zbiranje{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<!-- PRIJAVA -->
+<section id="prijava" class="prijava">
+  <h2>Povprečen obraz</h2>
+  <p class="muted">Predavateljska stran. Prijavi se z uporabnikom, ki si ga ustvaril v Supabase.</p>
+  <form id="obrazecPrijava" class="plosca">
+    <label>E-pošta<input id="email" type="email" autocomplete="username" required></label>
+    <label>Geslo<input id="geslo" type="password" autocomplete="current-password" required></label>
+    <button class="gumb glavni" style="width:100%">Prijava</button>
+    <p id="napakaPrijava" style="color:var(--warn);margin:10px 0 0"></p>
+  </form>
+  <p class="muted" style="margin-top:18px;font-size:.9rem">Brez prijave lahko aplikacijo preizkusiš s slikami s svojega računalnika:
+    <button class="gumb" id="brezPrijave" style="margin-top:6px">Preizkus brez prijave</button></p>
+</section>
+
+<!-- APLIKACIJA -->
+<div id="app" class="skrito" style="display:contents">
+<header>
+  <h1>Povprečen obraz</h1>
+  <span class="cip" id="cipSeja">Seja <b id="kodaSeje">—</b></span>
+  <span class="cip"><span class="pika" id="stanje"></span><span id="stevecGlava">0 selfijev</span></span>
+  <span class="razmik"></span>
+  <select class="gumb" id="uvozSkupina" title="Skupina za slike z računalnika"><option value="auto">skupina: iz imena datoteke</option><option value="m">skupina: študenti</option><option value="z">skupina: študentke</option><option value="x">skupina: neopredeljeno</option></select>
+  <label class="gumb" title="Doda slike s tega računalnika (ne nalaga jih na strežnik)">+ Slike z računalnika<input type="file" id="lokalneSlike" accept="image/*" multiple class="skrito"></label>
+  <button class="gumb" id="novaSeja">Nova seja</button>
+  <button class="gumb" id="tema" title="Svetla/temna tema">Tema</button>
+  <button class="gumb" id="celozaslonsko" title="Celozaslonski način">⛶</button>
+</header>
+<nav id="zavihki">
+  <button data-z="zbiranje" aria-selected="true">Zbiranje</button>
+  <button data-z="povprecje">Povprečni obraz</button>
+  <button data-z="nastajanje">Nastajanje</button>
+  <button data-z="vzorci">Vzorci</button>
+  <button data-z="galerija">Galerija</button>
+  <button data-z="matrika">Matrika parov</button>
+  <button data-z="dendrogram">Dendrogram</button>
+  <button data-z="podobnost">Podobnost</button>
+  <button data-z="eigen">Lastni obrazi</button>
+  <button data-z="regresija">Regresija</button>
+  <button data-z="zemljevid">Zemljevid</button>
+  <button data-z="zakljucek">Zaključek</button>
+</nav>
+<main>
+
+  <section class="zavihek aktiven" id="z-zbiranje">
+    <div class="zbiranje">
+      <div>
+        <h2>Posnemi selfi</h2>
+        <p class="uvod">Skeniraj QR kodo s telefonom, preberi obvestilo in pošlji selfi.</p>
+        <div class="qr" id="qr"></div>
+        <p style="margin:14px 0 2px" class="muted">ali odpri <b id="naslov" style="color:var(--ink);word-break:break-all"></b></p>
+        <p style="margin:0" class="muted">koda seje: <span class="koda" id="kodaVelika"></span></p>
+      </div>
+      <div>
+        <div class="vrstica" style="align-items:flex-end;gap:18px">
+          <div><div class="stevec" id="stevec">0</div><div class="muted">prejetih selfijev</div></div>
+          <div class="legenda muted" id="legenda"></div>
+        </div>
+        <div class="plosca" style="margin-top:16px;max-width:420px">
+          <canvas class="obraz" id="zivoPovprecje" width="300" height="300"></canvas>
+          <div class="oznaka"><b>Povprečje do zdaj</b><span class="muted" id="zivoN"></span></div>
+        </div>
+        <div class="stena" id="stena"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="zavihek" id="z-povprecje">
+    <h2>Povprečni obraz</h2>
+    <p class="uvod">Vsak obraz najprej poravnamo po očeh, nato ga s triangulacijo ključnih točk »upognemo« na povprečno obliko. Šele potem povprečimo barve točko za točko.</p>
+    <div class="mreza" id="povprecjaMreza" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))"></div>
+    <label class="vrstica" style="margin-top:14px"><input type="checkbox" id="pokaziMrezo"> Pokaži ključne točke in triangulacijo</label>
+  </section>
+
+  <section class="zavihek" id="z-nastajanje">
+    <h2>Kako nastaja povprečje</h2>
+    <p class="uvod">Z vsakim dodanim obrazom se povprečje spremeni manj. Graf kaže, koliko se povprečje prvih <i>n</i> obrazov še razlikuje od končnega povprečja, primerjano s teorijo vzorčenja: σ·√((N−n)/(n(N−1))).</p>
+    <div class="mreza" style="grid-template-columns:minmax(300px,580px) 1fr;align-items:start">
+      <div class="plosca">
+        <div style="display:grid;grid-template-columns:1fr 34%;gap:14px;align-items:end">
+          <canvas class="obraz" id="nastajanjeSlika"></canvas>
+          <figure style="margin:0"><img id="nastajanjeZadnji" class="zadnji" alt=""><figcaption class="muted" style="font-size:.85rem;margin-top:4px">zadnji dodan</figcaption></figure>
+        </div>
+        <div class="oznaka"><b id="nastajanjeN" style="font-size:1.5rem">n = 1</b></div>
+        <input type="range" id="nastajanjeDrsnik" min="1" max="1" value="1">
+        <div class="vrstica" style="margin-top:8px">
+          <button class="gumb glavni" id="nastajanjePredvajaj">▶ Predvajaj</button>
+          <button class="gumb" id="nastajanjePremesaj">Premešaj vrstni red</button>
+          <label class="vrstica">Hitrost <select class="gumb" id="nastajanjeHitrost"><option value="2500">zelo počasi</option><option value="1400" selected>počasi</option><option value="700">srednje</option><option value="250">hitro</option></select></label>
+        </div>
+      </div>
+      <div class="plosca"><svg class="graf" id="grafNastajanje" viewBox="0 0 640 360"></svg></div>
+    </div>
+  </section>
+
+  <section class="zavihek" id="z-vzorci">
+    <h2>Povprečja naključnih vzorcev</h2>
+    <p class="uvod">Iz skupine naključno izberemo <i>n</i> obrazov in jih povprečimo – in to ponovimo večkrat. Pri majhnih vzorcih so povprečja zelo različna, pri velikih skoraj enaka. Razpršenost povprečij vzorcev je <b>standardna napaka</b>.</p>
+    <div class="vrstica" style="margin-bottom:14px" id="vzorciSkupina">
+      <button class="gumb glavni" data-g="vsi">Vsi</button><button class="gumb" data-g="z">Študentke</button><button class="gumb" data-g="m">Študenti</button>
+      <button class="gumb glavni" id="vzorciNovi" style="margin-left:16px">↻ Novi vzorci</button>
+      <span class="muted" id="vzorciStatus"></span>
+    </div>
+    <div class="plosca" style="margin-bottom:16px">
+      <div class="vrstica" style="justify-content:space-between"><h3 style="margin:0">Majhni vzorci: n = <span id="vzorciA">3</span></h3><input type="range" id="vzorciADrsnik" min="1" max="5" value="3" style="width:240px"></div>
+      <div class="vzorci" id="vzorciVrstaA"></div>
+      <p class="muted" id="vzorciRazA" style="margin:8px 0 0"></p>
+    </div>
+    <div class="plosca">
+      <div class="vrstica" style="justify-content:space-between"><h3 style="margin:0">Veliki vzorci: n = <span id="vzorciB">15</span></h3><input type="range" id="vzorciBDrsnik" min="1" max="20" value="15" style="width:240px"></div>
+      <div class="vzorci" id="vzorciVrstaB"></div>
+      <p class="muted" id="vzorciRazB" style="margin:8px 0 0"></p>
+    </div>
+  </section>
+
+  <section class="zavihek" id="z-galerija">
+    <h2>Galerija</h2>
+    <p class="uvod">Vsi poravnani obrazi. Klikni na obraz in ga postopoma spremeni v povprečni obraz.</p>
+    <div class="vrstica" style="margin-bottom:14px" id="galerijaFilter">
+      <button class="gumb glavni" data-f="vsi">Vsi</button><button class="gumb" data-f="m">Študenti</button><button class="gumb" data-f="z">Študentke</button>
+    </div>
+    <div class="galerija" id="galerija"></div>
+  </section>
+
+  <section class="zavihek" id="z-matrika">
+    <h2>Matrika parov</h2>
+    <p class="uvod">V celici (i, j) je povprečje obrazov i in j; na robovih in na diagonali so izvirni obrazi. Vrstni red sledi dendrogramu, zato so podobni obrazi blizu. Klikni na celico za povečavo.</p>
+    <div class="vrstica" style="margin-bottom:12px" id="matrikaSkupina">
+      <button class="gumb glavni" data-g="z">Študentke</button><button class="gumb" data-g="m">Študenti</button><button class="gumb" data-g="vsi">Vsi</button>
+      <span class="muted" id="matrikaStatus"></span>
+    </div>
+    <div class="mreza" style="grid-template-columns:minmax(0,auto) minmax(220px,340px);align-items:start;justify-content:start">
+      <canvas id="matrika" class="matrika"></canvas>
+      <div class="plosca"><div class="mreza" style="grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px"><canvas class="obraz" id="matrikaA"></canvas><canvas class="obraz" id="matrikaB"></canvas></div><canvas class="obraz" id="matrikaPovecava"></canvas><p class="muted" id="matrikaOpis" style="margin:8px 0 0">Klikni na celico.</p></div>
+    </div>
+  </section>
+
+  <section class="zavihek" id="z-dendrogram">
+    <h2>Dendrogram – hierarhično razvrščanje v skupine</h2>
+    <p class="uvod">Na začetku je vsak obraz svoja skupina. Na vsakem koraku združimo najbolj podobni skupini (Wardova metoda). Višina povezave pove, kako različni sta bili združeni skupini. Če drevo »prerežemo« na izbrani višini, dobimo <i>k</i> skupin – spodaj so njihovi povprečni obrazi.</p>
+    <div class="vrstica" style="margin-bottom:12px" id="dendroSkupina">
+      <button class="gumb glavni" data-g="z">Študentke</button><button class="gumb" data-g="m">Študenti</button><button class="gumb" data-g="vsi">Vsi</button>
+      <label class="vrstica" style="margin-left:16px">Metoda
+        <select id="dendroMetoda" class="gumb"><option value="ward">Ward</option><option value="average">povprečna povezava</option><option value="complete">najbolj oddaljena (complete)</option><option value="single">najbližja (single)</option></select></label>
+      <label class="vrstica" style="margin-left:16px;min-width:260px">Število skupin <b id="dendroK">3</b><input type="range" id="dendroKDrsnik" min="1" max="8" value="3" style="width:160px"></label>
+    </div>
+    <div class="plosca" style="overflow-x:auto"><svg id="dendro" class="graf"></svg></div>
+    <div class="mreza" id="gruce" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr));margin-top:18px"></div>
+  </section>
+
+  <section class="zavihek" id="z-podobnost">
+    <h2>Kako podobni smo povprečju – in drug drugemu?</h2>
+    <p class="uvod">Razdaljo merimo kot kombinacijo razlike v <b>obliki</b> (položaji ključnih točk) in v <b>videzu</b> (barve pikslov po poravnavi). Vrednost 1 pomeni povprečno oddaljenost.</p>
+    <div class="mreza" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+      <div class="plosca"><h3 style="margin:0 0 8px">Porazdelitev razdalj od povprečja</h3><svg class="graf" id="grafRazdalje" viewBox="0 0 560 300"></svg></div>
+      <div class="plosca"><h3 style="margin:0 0 8px">Najbolj podobna para (»dvojčka«)</h3><div id="dvojcki" class="mreza" style="gap:12px"></div></div>
+    </div>
+    <div class="plosca" style="margin-top:18px"><h3 style="margin:0 0 8px">Od najbolj do najmanj povprečnega obraza</h3><div class="trak" id="rangiranje"></div></div>
+  </section>
+
+  <section class="zavihek" id="z-eigen">
+    <h2>Lastni obrazi (analiza glavnih komponent)</h2>
+    <p class="uvod">Vsak obraz je vektor z več deset tisoč števili (piksli). PCA poišče smeri, v katerih se obrazi najbolj razlikujejo. Vsak obraz je približno povprečje plus nekaj teh »lastnih obrazov«.</p>
+    <div class="mreza" style="grid-template-columns:repeat(auto-fit,minmax(min(460px,100%),1fr))">
+      <div class="plosca"><h3 style="margin:0 0 8px">Glavne komponente (povprečje −2σ | +2σ)</h3><div class="eigen" id="eigenMreza"></div></div>
+      <div class="plosca"><h3 style="margin:0 0 8px">Delež pojasnjene variance</h3><svg class="graf" id="grafScree" viewBox="0 0 560 300"></svg></div>
+      <div class="plosca"><h3 style="margin:0 0 8px">Sestavi obraz</h3>
+        <div class="mreza" style="grid-template-columns:200px 1fr;align-items:center">
+          <canvas class="obraz" id="sestavljen"></canvas>
+          <div class="drsniki" id="drsniki"></div>
+        </div>
+        <button class="gumb" id="ponastaviDrsnike" style="margin-top:8px">Ponastavi</button>
+      </div>
+      <div class="plosca"><h3 style="margin:0 0 8px">Rekonstrukcija obraza s k komponentami</h3>
+        <div class="mreza" style="grid-template-columns:1fr 1fr">
+          <figure style="margin:0"><canvas class="obraz" id="rekOriginal"></canvas><figcaption class="muted">izvirnik (poravnan)</figcaption></figure>
+          <figure style="margin:0"><canvas class="obraz" id="rekSlika"></canvas><figcaption class="muted" id="rekOpis"></figcaption></figure>
+        </div>
+        <input type="range" id="rekK" min="0" max="1" value="0" style="margin-top:10px">
+        <p class="muted" style="margin:8px 0 4px;font-size:.85rem">Izberi obraz:</p>
+        <div class="minigalerija" id="rekGalerija"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="zavihek" id="z-regresija">
+    <h2>Obraz kot linearna kombinacija drugih obrazov</h2>
+    <p class="uvod">Izberemo en obraz (odvisna spremenljivka <i>y</i>) in ga poskušamo čim bolje sestaviti iz ostalih obrazov iste skupine: <i>ŷ</i> = <i>b</i><sub>0</sub> + <i>b</i><sub>1</sub>·obraz<sub>1</sub> + … + <i>b</i><sub>k</sub>·obraz<sub>k</sub>. Opazovanja so piksli (po poravnavi na povprečno obliko), uteži določi metoda najmanjših kvadratov. Prediktorje dodajamo enega po enega – vsakič tistega, ki najbolj izboljša <i>R</i>².</p>
+    <div class="vrstica" style="margin-bottom:12px" id="regSkupina">
+      <button class="gumb glavni" data-g="z">Študentke</button><button class="gumb" data-g="m">Študenti</button><button class="gumb" data-g="vsi">Vsi</button>
+    </div>
+    <div class="minigalerija" id="regGalerija" style="margin-bottom:12px"></div>
+    <div id="regVsebina" class="mreza" style="grid-template-columns:minmax(0,1.3fr) minmax(300px,1fr);align-items:start">
+      <div class="plosca">
+        <div class="mreza" style="grid-template-columns:repeat(3,1fr);gap:10px">
+          <figure style="margin:0"><canvas class="obraz" id="regY"></canvas><figcaption class="muted">izbrani obraz <i>y</i></figcaption></figure>
+          <figure style="margin:0"><canvas class="obraz" id="regYhat"></canvas><figcaption class="muted">napoved <i>ŷ</i></figcaption></figure>
+          <figure style="margin:0"><canvas class="obraz" id="regOst"></canvas><figcaption class="muted">ostanki <i>y</i> − <i>ŷ</i> (ojačani)</figcaption></figure>
+        </div>
+        <div class="vrstica" style="margin-top:12px;justify-content:space-between"><b id="regK" style="font-size:1.3rem"></b><b id="regR2" style="font-size:1.3rem;color:var(--acc)"></b></div>
+        <input type="range" id="regKDrsnik" min="0" max="1" value="1">
+      </div>
+      <div class="plosca"><h3 style="margin:0 0 8px">Uteži (največje po absolutni vrednosti)</h3><div id="regUtezi"></div>
+        <h3 style="margin:16px 0 8px"><i>R</i>² glede na število prediktorjev</h3><svg class="graf" id="regGraf" viewBox="0 0 560 260"></svg></div>
+    </div>
+    <div id="regPrazno" class="prazno skrito">Potrebujemo vsaj 3 obraze v tej skupini.</div>
+  </section>
+
+  <section class="zavihek" id="z-zemljevid">
+    <h2>Zemljevid podobnosti</h2>
+    <p class="uvod">Vsak obraz je točka. Podobni obrazi so blizu. <b>t-SNE</b> razporedi obraze tako, da ohrani sosedstva; <b>PCA</b> pokaže prvi dve glavni komponenti.</p>
+    <div class="vrstica" style="margin-bottom:12px">
+      <button class="gumb glavni" id="zemTSNE">t-SNE</button>
+      <button class="gumb" id="zemPCA">PCA (PC1 × PC2)</button>
+      <span class="legenda muted" id="zemLegenda" style="margin-left:12px"></span>
+    </div>
+    <div class="zemljevid" id="zemljevid"></div>
+  </section>
+
+  <section class="zavihek" id="z-zakljucek">
+    <h2>Zaključek</h2>
+    <p class="uvod">Shrani anonimne rezultate (povprečne obraze), nato izbriši vse selfije te seje s strežnika. Samodejno se izbrišejo tudi po 3 urah.</p>
+    <div class="mreza" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+      <div class="plosca">
+        <h3 style="margin-top:0">1. Shrani povprečja</h3>
+        <div class="vrstica"><button class="gumb" data-prenos="vsi">Povprečje – vsi</button><button class="gumb" data-prenos="m">Študenti</button><button class="gumb" data-prenos="z">Študentke</button></div>
+      </div>
+      <div class="plosca">
+        <h3 style="margin-top:0">2. Izbriši selfije</h3>
+        <p class="muted" id="brisanjeOpis"></p>
+        <button class="gumb nevaren" id="izbrisi">Izbriši vse selfije te seje</button>
+        <p id="brisanjeStatus" style="margin-bottom:0"></p>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+
+<div id="modal" class="modal skrito">
+  <div class="plosca">
+    <div class="mreza" style="grid-template-columns:1fr 1.3fr 1fr;align-items:center">
+      <canvas class="obraz" id="modalIzvirnik"></canvas>
+      <div>
+        <canvas class="obraz" id="modalMorph"></canvas>
+        <input type="range" id="modalDrsnik" min="0" max="100" value="0" style="margin-top:10px">
+        <div class="oznaka"><span>ta obraz</span><b id="modalT">0 %</b><span>povprečje</span></div>
+      </div>
+      <canvas class="obraz" id="modalPovprecje"></canvas>
+    </div>
+    <div class="oznaka"><span class="muted" id="modalOpis"></span><button class="gumb" id="modalZapri">Zapri</button></div>
+  </div>
+</div>
+
+<script type="module">
+// Povezava na Supabase. Oba podatka sta javna (namenjena brskalniku);
+// zaščito zagotavljajo pravila v bazi (supabase_nastavitev.sql).
+const SUPABASE_URL = "https://nzgjwsenyupendpzivfm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_QdGFDGSwDkfGBipDiIrBrA_i7k5hWhk";
+
+// Skupno jedro: zaznava obraza, poravnava, triangulacija in upogibanje (WebGL).
+
+const S = 300;                 // velikost poravnanega izreza (px)
+const OKO_RAZDALJA = 0.30 * S; // razdalja med očesoma po poravnavi
+const OKO_SREDINA = [0.5 * S, 0.40 * S];
+
+// Izbor 90 od 478 MediaPipe točk.
+const OVAL = [10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377,
+  152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109];
+const OBRVI = [70, 63, 105, 66, 107, 336, 296, 334, 293, 300];
+const NOS = [168, 6, 197, 195, 5, 4, 1, 2, 98, 327, 64, 294];
+const OKO_A = [33, 160, 158, 133, 153, 144];
+const OKO_B = [362, 385, 387, 263, 373, 380];
+const USTNICE = [61, 39, 37, 0, 267, 269, 291, 321, 314, 17, 84, 91, 78, 82, 13, 312, 308, 317, 14, 87];
+const TOCKE = [...OVAL, ...OBRVI, ...NOS, ...OKO_A, ...OKO_B, ...USTNICE];
+const off = (arr) => TOCKE.indexOf(arr[0]);
+const IDX_OVAL = OVAL.map((_, i) => i);
+const IDX_OKO_A = OKO_A.map((_, i) => off(OKO_A) + i);
+const IDX_OKO_B = OKO_B.map((_, i) => off(OKO_B) + i);
+const IDX_NOS_KONICA = TOCKE.indexOf(1);
+
+// Robne točke (vogali in sredine robov), ki ostanejo pri upogibanju na mestu.
+const ROB = [[0, 0], [S / 2, 0], [S, 0], [S, S / 2], [S, S], [S / 2, S], [0, S], [0, S / 2]];
+
+const povp = (pts, idx) => {
+  let x = 0, y = 0;
+  for (const i of idx) { x += pts[i][0]; y += pts[i][1]; }
+  return [x / idx.length, y / idx.length];
+};
+
+// ── MediaPipe (naloži se šele, ko je potreben) ────────────────────────────
+const MP = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+let _lm = null;
+function naloziZaznavo() {
+  if (!_lm) {
+    _lm = (async () => {
+      const { FaceLandmarker, FilesetResolver } = await import(`${MP}/vision_bundle.mjs`);
+      const fs = await FilesetResolver.forVisionTasks(`${MP}/wasm`);
+      return FaceLandmarker.createFromOptions(fs, {
+        baseOptions: { modelAssetPath: location.protocol === "file:" ? "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task" : new URL("face_landmarker.task", location.href).href, delegate: "CPU" },
+        runningMode: "IMAGE",
+        numFaces: 2,
+      });
+    })();
+    _lm.catch(() => { _lm = null; });
+  }
+  return _lm;
+}
+
+// Datoteka → platno (največ 1280 px po daljši stranici).
+function datotekaVPlatno(file, maks = 1280) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, maks / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.naturalWidth * k);
+      c.height = Math.round(img.naturalHeight * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Slike ni bilo mogoče odpreti.")); };
+    img.src = url;
+  });
+}
+
+// Zazna obraz na platnu in vrne poravnan izrez ali {napaka}.
+async function zaznajInPoravnaj(platno) {
+  const lm = await naloziZaznavo();
+  const res = lm.detect(platno);
+  const obrazi = res.faceLandmarks || [];
+  if (obrazi.length === 0) return { napaka: "Na sliki ni bilo mogoče najti obraza. Poskusi pri boljši svetlobi in poglej naravnost v kamero." };
+  if (obrazi.length > 1) return { napaka: "Na sliki je več obrazov. Na selfiju naj bo samo tvoj obraz." };
+  const f = obrazi[0], W = platno.width, H = platno.height;
+  const pts = TOCKE.map((i) => [f[i].x * W, f[i].y * H]);
+  const a = povp(pts, IDX_OKO_A), b = povp(pts, IDX_OKO_B);
+  const iod = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  if (iod < 25) return { napaka: "Obraz je premajhen. Telefon približaj obrazu." };
+  const sred = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const nos = pts[IDX_NOS_KONICA];
+  // nos glede na os med očesoma (zasuk glave levo/desno)
+  const ux = (b[0] - a[0]) / iod, uy = (b[1] - a[1]) / iod;
+  const odmik = ((nos[0] - sred[0]) * ux + (nos[1] - sred[1]) * uy) / iod;
+  if (Math.abs(odmik) > 0.22) return { napaka: "Glava je preveč obrnjena vstran. Poglej naravnost v kamero." };
+  return poravnaj(platno, pts);
+}
+
+// Podobnostna transformacija: oči na fiksni položaj, izrez S×S.
+function poravnaj(vir, pts) {
+  const a = povp(pts, IDX_OKO_A), b = povp(pts, IDX_OKO_B);
+  // oko A naj bo levo na sliki
+  let L = a, R = b;
+  if (a[0] > b[0]) { L = b; R = a; }
+  const dx = R[0] - L[0], dy = R[1] - L[1];
+  const s = OKO_RAZDALJA / Math.hypot(dx, dy);
+  const ang = -Math.atan2(dy, dx);
+  const cs = Math.cos(ang) * s, sn = Math.sin(ang) * s;
+  const cx = (L[0] + R[0]) / 2, cy = (L[1] + R[1]) / 2;
+  const [tx, ty] = OKO_SREDINA;
+  const e = tx - cs * cx + sn * cy, f = ty - sn * cx - cs * cy;
+  const c = document.createElement("canvas");
+  c.width = c.height = S;
+  const g = c.getContext("2d");
+  g.fillStyle = "#808080";
+  g.fillRect(0, 0, S, S);
+  g.setTransform(cs, sn, -sn, cs, e, f);
+  g.imageSmoothingQuality = "high";
+  g.drawImage(vir, 0, 0);
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  const nove = pts.map(([x, y]) => [cs * x - sn * y + e, sn * x + cs * y + f]);
+  return { platno: c, tocke: nove };
+}
+
+// ── Delaunayeva triangulacija (Bowyer–Watson) ─────────────────────────────
+function delaunay(P) {
+  const n = P.length;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [x, y] of P) { minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); }
+  const d = Math.max(maxX - minX, maxY - minY) * 20, mx = (minX + maxX) / 2, my = (minY + maxY) / 2;
+  const T = P.concat([[mx - d, my - d], [mx, my + d], [mx + d, my - d]]);
+  const krog = (i, j, k) => {
+    const [ax, ay] = T[i], [bx, by] = T[j], [cx, cy] = T[k];
+    const D = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+    const ux = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / D;
+    const uy = ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / D;
+    return [ux, uy, (ax - ux) ** 2 + (ay - uy) ** 2];
+  };
+  let tri = [[n, n + 1, n + 2, krog(n, n + 1, n + 2)]];
+  for (let p = 0; p < n; p++) {
+    const [px, py] = T[p];
+    const slabi = [], dobri = [];
+    for (const t of tri) {
+      const [ux, uy, r2] = t[3];
+      ((px - ux) ** 2 + (py - uy) ** 2 < r2 ? slabi : dobri).push(t);
+    }
+    const robovi = new Map();
+    for (const t of slabi) {
+      for (const [u, v] of [[t[0], t[1]], [t[1], t[2]], [t[2], t[0]]]) {
+        const k = u < v ? u + "," + v : v + "," + u;
+        robovi.set(k, robovi.has(k) ? null : [u, v]);
+      }
+    }
+    tri = dobri;
+    for (const e of robovi.values()) {
+      if (!e) continue;
+      const kr = krog(e[0], e[1], p);
+      if (isFinite(kr[2])) tri.push([e[0], e[1], p, kr]);
+    }
+  }
+  return tri.filter((t) => t[0] < n && t[1] < n && t[2] < n).map((t) => [t[0], t[1], t[2]]);
+}
+
+// ── Upogibanje (piecewise affine warp) z WebGL ────────────────────────────
+class Upogib {
+  constructor(velikost = S) {
+    this.N = velikost;
+    this.c = document.createElement("canvas");
+    this.c.width = this.c.height = velikost;
+    const gl = this.c.getContext("webgl", { preserveDrawingBuffer: true, premultipliedAlpha: false, antialias: false });
+    if (!gl) throw new Error("Brskalnik ne podpira WebGL.");
+    this.gl = gl;
+    const sh = (tip, src) => { const s = gl.createShader(tip); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+    const pr = gl.createProgram();
+    gl.attachShader(pr, sh(gl.VERTEX_SHADER,
+      "attribute vec2 p;attribute vec2 uv;uniform float n;varying vec2 v;void main(){v=uv;gl_Position=vec4(p.x/n*2.0-1.0,p.y/n*2.0-1.0,0.0,1.0);}"));
+    gl.attachShader(pr, sh(gl.FRAGMENT_SHADER,
+      "precision highp float;varying vec2 v;uniform sampler2D t;void main(){gl_FragColor=texture2D(t,v);}"));
+    gl.linkProgram(pr);
+    gl.useProgram(pr);
+    this.aP = gl.getAttribLocation(pr, "p");
+    this.aUV = gl.getAttribLocation(pr, "uv");
+    gl.uniform1f(gl.getUniformLocation(pr, "n"), S);
+    this.bP = gl.createBuffer();
+    this.bUV = gl.createBuffer();
+    gl.viewport(0, 0, velikost, velikost);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  }
+  tekstura(vir, w = S, h = S) {
+    const gl = this.gl, t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    if (vir instanceof Uint8Array || vir instanceof Uint8ClampedArray) {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+        vir instanceof Uint8Array ? vir : new Uint8Array(vir.buffer, vir.byteOffset, vir.length));
+    } else {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, vir);
+    }
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return t;
+  }
+  pobrisi(t) { this.gl.deleteTexture(t); }
+  // Teksturo z oblike `iz` preslika na obliko `v` (obe brez robnih točk); vrne RGBA pikslov N×N.
+  upogni(tex, iz, v, tri) {
+    const gl = this.gl;
+    const A = iz.concat(ROB), B = v.concat(ROB);
+    const pos = new Float32Array(tri.length * 6), uv = new Float32Array(tri.length * 6);
+    let k = 0;
+    for (const t of tri) for (const i of t) {
+      pos[k] = B[i][0]; uv[k] = A[i][0] / S; k++;
+      pos[k] = B[i][1]; uv[k] = A[i][1] / S; k++;
+    }
+    gl.clearColor(0.5, 0.5, 0.5, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.bP);
+    gl.bufferData(gl.ARRAY_BUFFER, pos, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(this.aP);
+    gl.vertexAttribPointer(this.aP, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.bUV);
+    gl.bufferData(gl.ARRAY_BUFFER, uv, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(this.aUV);
+    gl.vertexAttribPointer(this.aUV, 2, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, tri.length * 3);
+    const out = new Uint8ClampedArray(this.N * this.N * 4);
+    gl.readPixels(0, 0, this.N, this.N, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(out.buffer));
+    return out;
+  }
+}
+
+// Pomožne funkcije za piksle
+function narisi(canvas, piksli, n = S) {
+  canvas.width = canvas.height = n;
+  canvas.getContext("2d").putImageData(new ImageData(piksli, n, n), 0, 0);
+}
+function povprecjeOblik(seznam) {
+  const m = seznam[0].map(() => [0, 0]);
+  for (const p of seznam) p.forEach(([x, y], i) => { m[i][0] += x; m[i][1] += y; });
+  return m.map(([x, y]) => [x / seznam.length, y / seznam.length]);
+}
+
+// ── stran ──
+
+const $ = (id) => document.getElementById(id);
+const IME = { m: "Študenti", z: "Študentke", x: "Neopredeljeno" };
+const shrani = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} };
+const preberi = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+
+// ── Prijava (Supabase Auth prek REST) ─────────────────────────────────────
+let avt = null; // {access_token, refresh_token, expires_at}
+try { avt = JSON.parse(sessionStorage.getItem("po-avt") || "null"); } catch {}
+let lokalno = false;
+
+async function zetonAvt(telo, tip) {
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=${tip}`, {
+    method: "POST", headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" }, body: JSON.stringify(telo),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error_description || j.msg || j.message || "Prijava ni uspela");
+  avt = { access_token: j.access_token, refresh_token: j.refresh_token, expires_at: Date.now() + j.expires_in * 1000 };
+  try { sessionStorage.setItem("po-avt", JSON.stringify(avt)); } catch {}
+}
+async function zeton() {
+  if (avt && Date.now() > avt.expires_at - 60000) {
+    try { await zetonAvt({ refresh_token: avt.refresh_token }, "refresh_token"); }
+    catch { try { sessionStorage.removeItem("po-avt"); } catch {} location.reload(); throw new Error("Prijava je potekla"); }
+  }
+  return avt.access_token;
+}
+async function api(pot, opts = {}) {
+  const r = await fetch(SUPABASE_URL + pot, {
+    ...opts, headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + (await zeton()), "Content-Type": "application/json", ...(opts.headers || {}) },
+  });
+  if (!r.ok) throw new Error("Strežnik: " + r.status + " " + (await r.text()).slice(0, 200));
+  const t = await r.text();
+  return t ? JSON.parse(t) : null;
+}
+
+$("obrazecPrijava").onsubmit = async (e) => {
+  e.preventDefault();
+  $("napakaPrijava").textContent = "";
+  try {
+    await zetonAvt({ email: $("email").value.trim(), password: $("geslo").value }, "password");
+    vstopi();
+  } catch (err) { $("napakaPrijava").textContent = err.message; }
+};
+$("brezPrijave").onclick = () => { lokalno = true; vstopi(); };
+
+// ── Seja ──────────────────────────────────────────────────────────────────
+let seja = preberi("po-seja");
+function novaKoda() {
+  const a = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  let k = ""; for (let i = 0; i < 4; i++) k += a[Math.floor(Math.random() * a.length)];
+  return k;
+}
+function nastaviSejo(k) {
+  seja = k; shrani("po-seja", k);
+  $("kodaSeje").textContent = k; $("kodaVelika").textContent = k;
+  const url = new URL("index.html?s=" + k, location.href).href;
+  $("naslov").textContent = url.replace(/^https?:\/\//, "");
+  if (location.protocol === "file:") { $("qr").innerHTML = `<p style="color:#333;margin:0">Stran je odprta iz mape na računalniku, zato je telefoni ne morejo doseči. QR koda bo delovala, ko bo stran objavljena na spletu (npr. GitHub Pages).</p>`; return; }
+  try {
+    const qr = window.qrcode(0, "M"); qr.addData(url); qr.make();
+    $("qr").innerHTML = `<img alt="QR koda" src="${qr.createDataURL(10, 1)}">`;
+  } catch { $("qr").innerHTML = `<p style="color:#333;margin:0">QR koda ni na voljo – uporabi naslov spodaj.</p>`; }
+}
+let potrdiNovo = false;
+$("novaSeja").onclick = () => {
+  if (obrazi.length && !potrdiNovo) {
+    potrdiNovo = true; $("novaSeja").textContent = "Res? Klikni še enkrat";
+    setTimeout(() => { potrdiNovo = false; $("novaSeja").textContent = "Nova seja"; }, 4000);
+    return;
+  }
+  potrdiNovo = false; $("novaSeja").textContent = "Nova seja";
+  pocistiObraze(); zadnjiCas = null; nastaviSejo(novaKoda());
+};
+
+function vstopi() {
+  $("prijava").classList.add("skrito");
+  $("app").classList.remove("skrito");
+  nastaviSejo(seja || novaKoda());
+  if (lokalno) {
+    $("cipSeja").title = "Preizkusni način: slike ostanejo na tem računalniku.";
+    $("stanje").className = "pika"; $("stevecGlava").textContent = "preizkusni način";
+  } else {
+    osvezi(); setInterval(osvezi, 3000);
+  }
+  izrisi();
+}
+
+// ── Obrazi ────────────────────────────────────────────────────────────────
+const up = new Upogib(S);
+const upMali = new Upogib(150);
+const obrazi = []; // {id, skupina, src, tocke, tex, texMali}
+const znani = new Set();
+let verzija = 0, zadnjiCas = null;
+
+function pocistiObraze() {
+  for (const o of obrazi) { up.pobrisi(o.tex); upMali.pobrisi(o.texMali); }
+  obrazi.length = 0; znani.clear(); verzija++;
+  $("stena").innerHTML = "";
+  izrisi();
+}
+
+async function dodajObraz({ id, skupina, src, tocke }) {
+  if (znani.has(id)) return;
+  if (!Array.isArray(tocke) || tocke.length !== TOCKE.length) return;
+  znani.add(id);
+  const img = new Image();
+  img.src = src;
+  try { await img.decode(); } catch { znani.delete(id); return; }
+  const o = { id, img, skupina: IME[skupina] ? skupina : "x", src, tocke, tex: up.tekstura(img), texMali: upMali.tekstura(img) };
+  obrazi.push(o);
+  verzija++;
+  const t = document.createElement("img");
+  t.src = src; t.className = "rob " + o.skupina; t.alt = "";
+  $("stena").prepend(t);
+  while ($("stena").children.length > 60) $("stena").lastChild.remove();
+  planiraj();
+}
+
+async function osvezi() {
+  if (!seja || lokalno) return;
+  try {
+    let q = `/rest/v1/prispevki?select=id,created_at,skupina,slika,tocke&seja=eq.${encodeURIComponent(seja)}&order=created_at.asc&limit=200`;
+    if (zadnjiCas) q += `&created_at=gt.${encodeURIComponent(zadnjiCas)}`;
+    const k = seja;
+    const vrstice = await api(q);
+    if (k !== seja) return;
+    for (const r of vrstice) { zadnjiCas = r.created_at; await dodajObraz({ id: r.id, skupina: r.skupina, src: r.slika, tocke: r.tocke }); }
+    $("stanje").className = "pika ok";
+  } catch (err) {
+    console.warn(err);
+    $("stanje").className = "pika err";
+  }
+}
+
+$("lokalneSlike").onchange = async (e) => {
+  const datoteke = [...e.target.files]; e.target.value = "";
+  let ok = 0, napake = 0;
+  const glava = $("stevecGlava");
+  for (const [i, f] of datoteke.entries()) {
+    glava.textContent = `obdelujem ${i + 1}/${datoteke.length} …`;
+    try {
+      const r = await zaznajInPoravnaj(await datotekaVPlatno(f));
+      if (r.napaka) { napake++; continue; }
+      const ime = (f.webkitRelativePath || f.name).toLowerCase();
+      const izbira = $("uvozSkupina").value;
+      const skupina = izbira !== "auto" ? izbira : /studentk|žensk|zensk|\bz\b|_z_|female/.test(ime) ? "z" : /student|moš|mos|\bm\b|_m_|male/.test(ime) ? "m" : "x";
+      await dodajObraz({ id: "lokalno-" + f.name + "-" + Math.random(), skupina, src: r.platno.toDataURL("image/jpeg", 0.9), tocke: r.tocke });
+      ok++;
+    } catch (err) { console.error(err); napake++; }
+  }
+  glava.textContent = `${obrazi.length} selfijev`;
+  if (napake) alertTiho(`Dodanih ${ok} slik, ${napake} slik brez zaznanega obraza.`);
+};
+function alertTiho(t) { $("stevecGlava").textContent = t; setTimeout(() => posodobiStevce(), 5000); }
+
+// ── Model: povprečna oblika, triangulacija, upognjeni obrazi ──────────────
+let M = null;
+function model() {
+  if (M && M.ver === verzija) return M;
+  if (!obrazi.length) return (M = null);
+  const oblika = povprecjeOblik(obrazi.map((o) => o.tocke));
+  const tri = delaunay(oblika.concat(ROB));
+  const W = obrazi.map((o) => up.upogni(o.tex, o.tocke, oblika, tri));
+  M = { ver: verzija, oblika, tri, W, skupine: {}, an: null };
+  return M;
+}
+const indeksi = (sk) => obrazi.map((o, i) => i).filter((i) => sk === "vsi" || obrazi[i].skupina === sk);
+
+function povprecjePikslov(W, idx) {
+  const n = idx.length, P = S * S * 4, vsota = new Float32Array(P);
+  for (const i of idx) { const w = W[i]; for (let k = 0; k < P; k++) vsota[k] += w[k]; }
+  const out = new Uint8ClampedArray(P);
+  for (let k = 0; k < P; k++) out[k] = vsota[k] / n;
+  return out;
+}
+// Povprečje skupine: piksli na povprečni obliki skupine (+ v skupni obliki za morph)
+function povprecjeSkupine(sk) {
+  const m = model(); if (!m) return null;
+  if (m.skupine[sk]) return m.skupine[sk];
+  const idx = indeksi(sk);
+  if (!idx.length) return (m.skupine[sk] = null);
+  return (m.skupine[sk] = povprecjeIndeksov(idx));
+}
+function povprecjeIndeksov(idx) {
+  const m = model();
+  const vSkupni = povprecjePikslov(m.W, idx);
+  const oblika = povprecjeOblik(idx.map((i) => obrazi[i].tocke));
+  const tex = up.tekstura(vSkupni);
+  const piksli = up.upogni(tex, m.oblika, oblika, m.tri);
+  up.pobrisi(tex);
+  return { n: idx.length, vSkupni, oblika, piksli };
+}
+
+// ── Izris po zavihkih ─────────────────────────────────────────────────────
+let aktivni = "zbiranje", casovnik = null;
+function planiraj() { clearTimeout(casovnik); casovnik = setTimeout(izrisi, 500); posodobiStevce(); }
+function posodobiStevce() {
+  const n = obrazi.length;
+  $("stevec").textContent = n;
+  if (!lokalno) $("stevecGlava").textContent = `${n} ${n === 1 ? "selfi" : n === 2 ? "selfija" : n < 5 && n > 2 ? "selfiji" : "selfijev"}`;
+  const c = { m: 0, z: 0, x: 0 }; obrazi.forEach((o) => c[o.skupina]++);
+  const leg = Object.keys(c).filter((k) => c[k]).map((k) => `<span class="${k}"><i></i>${IME[k]}: ${c[k]}</span>`).join("");
+  $("legenda").innerHTML = leg; $("zemLegenda").innerHTML = leg;
+  $("brisanjeOpis").textContent = lokalno ? "Preizkusni način – na strežniku ni ničesar." : `Seja ${seja}: ${n} selfijev na strežniku.`;
+}
+const IZRIS = {};
+function izrisi() {
+  posodobiStevce();
+  try { IZRIS[aktivni]?.(); } catch (err) { console.error(err); }
+}
+$("zavihki").onclick = (e) => {
+  const b = e.target.closest("button[data-z]"); if (!b) return;
+  ustaviAnimacije();
+  aktivni = b.dataset.z;
+  document.querySelectorAll("#zavihki button").forEach((x) => x.setAttribute("aria-selected", x === b));
+  document.querySelectorAll(".zavihek").forEach((z) => z.classList.toggle("aktiven", z.id === "z-" + aktivni));
+  izrisi();
+};
+let animacije = [];
+function ustaviAnimacije() { animacije.forEach((f) => f()); animacije = []; }
+
+function praznoPlatno(c) { c.width = c.height = S; const g = c.getContext("2d"); g.clearRect(0, 0, S, S); }
+
+// Zbiranje
+IZRIS.zbiranje = () => {
+  const p = povprecjeSkupine("vsi");
+  if (p) narisi($("zivoPovprecje"), p.piksli); else praznoPlatno($("zivoPovprecje"));
+  $("zivoN").textContent = p ? `n = ${p.n}` : "še ni selfijev";
+};
+
+// Povprečni obraz
+IZRIS.povprecje = () => {
+  const mr = $("povprecjaMreza"); mr.innerHTML = "";
+  if (!obrazi.length) { mr.innerHTML = `<div class="prazno">Še ni selfijev.</div>`; return; }
+  for (const sk of ["vsi", "m", "z"]) {
+    const p = povprecjeSkupine(sk); if (!p) continue;
+    const fig = document.createElement("figure"); fig.className = "plosca"; fig.style.margin = 0;
+    const c = document.createElement("canvas"); c.className = "obraz";
+    narisi(c, p.piksli);
+    if (sk === "vsi" && $("pokaziMrezo").checked) risiMrezo(c, p.oblika);
+    fig.append(c);
+    fig.insertAdjacentHTML("beforeend", `<figcaption class="oznaka"><b>${sk === "vsi" ? "Vsi" : IME[sk]}</b><span class="muted">n = ${p.n}</span></figcaption>`);
+    mr.append(fig);
+  }
+};
+$("pokaziMrezo").onchange = () => IZRIS.povprecje();
+function risiMrezo(c, oblika) {
+  const g = c.getContext("2d"), P = oblika.concat(ROB), tri = model().tri;
+  g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 0.7;
+  for (const [a, b, d] of tri) { g.beginPath(); g.moveTo(...P[a]); g.lineTo(...P[b]); g.lineTo(...P[d]); g.closePath(); g.stroke(); }
+  g.fillStyle = "#4fb3bd";
+  for (const [x, y] of oblika) { g.beginPath(); g.arc(x, y, 2.2, 0, 7); g.fill(); }
+}
+
+// Nastajanje
+const nast = { red: null, n: 1, vsota: null, vsotaOblik: null, nVsota: 0, metrika: null, ver: -1 };
+function nastPripravi() {
+  const m = model(); const N = obrazi.length;
+  if (nast.ver !== m.ver || !nast.red || nast.red.length !== N) {
+    nast.red = obrazi.map((_, i) => i);
+    nast.ver = m.ver; nast.nVsota = 0; nast.n = N; nast.metrika = null;
+  }
+  if (!nast.metrika) nast.metrika = izracunajMetriko(m, nast.red);
+}
+function izracunajMetriko(m, red) {
+  // vzorec pikslov (vsak 2. v obeh smereh), RGB
+  const N = red.length, idx = [];
+  for (let y = 0; y < S; y += 2) for (let x = 0; x < S; x += 2) { const k = (y * S + x) * 4; idx.push(k, k + 1, k + 2); }
+  const P = idx.length, kon = new Float64Array(P), kv = new Float64Array(P);
+  for (const i of red) { const w = m.W[i]; for (let j = 0; j < P; j++) { const v = w[idx[j]]; kon[j] += v; kv[j] += v * v; } }
+  let sig2 = 0;
+  for (let j = 0; j < P; j++) { kon[j] /= N; sig2 += kv[j] / N - kon[j] * kon[j]; }
+  sig2 /= P;
+  const vsota = new Float64Array(P), meritve = [], teorija = [];
+  red.forEach((i, t) => {
+    const w = m.W[i], n = t + 1; let d = 0;
+    for (let j = 0; j < P; j++) { vsota[j] += w[idx[j]]; const r = vsota[j] / n - kon[j]; d += r * r; }
+    meritve.push(Math.sqrt(d / P));
+    teorija.push(N > 1 ? Math.sqrt(sig2 * (N - n) / (n * (N - 1))) : 0);
+  });
+  return { meritve, teorija, sig: Math.sqrt(sig2) };
+}
+function nastSlika(n) {
+  const m = model(), red = nast.red, Pn = S * S * 4;
+  if (!nast.vsota || nast.nVsota > n) { nast.vsota = new Float32Array(Pn); nast.vsotaOblik = TOCKE.map(() => [0, 0]); nast.nVsota = 0; }
+  while (nast.nVsota < n) {
+    const i = red[nast.nVsota], w = m.W[i];
+    for (let k = 0; k < Pn; k++) nast.vsota[k] += w[k];
+    obrazi[i].tocke.forEach(([x, y], j) => { nast.vsotaOblik[j][0] += x; nast.vsotaOblik[j][1] += y; });
+    nast.nVsota++;
+  }
+  const pk = new Uint8ClampedArray(Pn);
+  for (let k = 0; k < Pn; k++) pk[k] = nast.vsota[k] / n;
+  const oblika = nast.vsotaOblik.map(([x, y]) => [x / n, y / n]);
+  const tex = up.tekstura(pk);
+  narisi($("nastajanjeSlika"), up.upogni(tex, m.oblika, oblika, m.tri));
+  up.pobrisi(tex);
+  $("nastajanjeN").textContent = `n = ${n}`;
+  const zadnji = obrazi[red[n - 1]], zi = $("nastajanjeZadnji");
+  if (zi.getAttribute("src") !== zadnji.src) {
+    zi.src = zadnji.src; zi.className = "zadnji " + zadnji.skupina;
+    void zi.offsetWidth; zi.classList.add("novo");
+  }
+  grafNastajanje(n);
+}
+function grafNastajanje(n) {
+  const { meritve, teorija } = nast.metrika;
+  crtniGraf($("grafNastajanje"), {
+    x: meritve.map((_, i) => i + 1),
+    serije: [
+      { y: teorija, barva: "var(--muted)", crtkano: true, ime: "teorija (naključni vrstni red)" },
+      { y: meritve, barva: "var(--acc)", ime: "izmerjeno" },
+    ],
+    oznakaX: "število obrazov n", oznakaY: "razlika od končnega povprečja (RMS, 0–255)", oznacen: n,
+  });
+}
+IZRIS.nastajanje = () => {
+  if (!obrazi.length) { praznoPlatno($("nastajanjeSlika")); $("grafNastajanje").innerHTML = ""; return; }
+  nastPripravi();
+  const d = $("nastajanjeDrsnik"); d.max = obrazi.length;
+  nast.n = Math.min(nast.n, obrazi.length); d.value = nast.n;
+  nastSlika(nast.n);
+};
+$("nastajanjeDrsnik").oninput = (e) => { nast.n = +e.target.value; nastSlika(nast.n); };
+$("nastajanjePremesaj").onclick = () => {
+  if (!obrazi.length) return;
+  nastPripravi();
+  const r = nast.red;
+  for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; }
+  nast.nVsota = 0; nast.vsota = null; nast.metrika = izracunajMetriko(model(), r);
+  nast.n = 1; $("nastajanjeDrsnik").value = 1; nastSlika(1);
+};
+$("nastajanjePredvajaj").onclick = () => {
+  if (!obrazi.length) return;
+  const g = $("nastajanjePredvajaj");
+  if (g.dataset.tece) { ustaviAnimacije(); return; }
+  if (nast.n >= obrazi.length) nast.n = 0;
+  g.dataset.tece = "1"; g.textContent = "❚❚ Ustavi";
+  let zadnjic = 0, ziv = true;
+  const korak = (t) => {
+    if (!ziv) return;
+    const zamik = +$("nastajanjeHitrost").value;
+    if (t - zadnjic > zamik) {
+      zadnjic = t; nast.n++;
+      $("nastajanjeDrsnik").value = nast.n; nastSlika(nast.n);
+      if (nast.n >= obrazi.length) { stop(); return; }
+    }
+    requestAnimationFrame(korak);
+  };
+  const stop = () => { ziv = false; delete g.dataset.tece; g.textContent = "▶ Predvajaj"; };
+  animacije.push(stop);
+  requestAnimationFrame(korak);
+};
+
+// Galerija + modal
+let filter = "vsi";
+$("galerijaFilter").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  filter = b.dataset.f;
+  [...$("galerijaFilter").children].forEach((x) => x.classList.toggle("glavni", x === b));
+  IZRIS.galerija();
+};
+IZRIS.galerija = () => {
+  const g = $("galerija"); g.innerHTML = "";
+  const idx = indeksi(filter);
+  if (!idx.length) { g.innerHTML = `<div class="prazno" style="grid-column:1/-1">Ni obrazov.</div>`; return; }
+  for (const i of idx) {
+    const b = document.createElement("button");
+    b.innerHTML = `<img src="${obrazi[i].src}" class="rob ${obrazi[i].skupina}" alt="">`;
+    b.onclick = () => odpriModal(i);
+    g.append(b);
+  }
+};
+let modalI = -1;
+function odpriModal(i) {
+  modalI = i;
+  const p = povprecjeSkupine("vsi");
+  const im = new Image(); im.src = obrazi[i].src;
+  im.decode().then(() => { const c = $("modalIzvirnik"); c.width = c.height = S; c.getContext("2d").drawImage(im, 0, 0); });
+  narisi($("modalPovprecje"), p.piksli);
+  $("modalDrsnik").value = 0; modalOkvir(0);
+  const an = analiza();
+  const rang = an ? an.vrstni.indexOf(i) + 1 : 0;
+  $("modalOpis").textContent = an ? `Po podobnosti s povprečjem: ${rang}. od ${obrazi.length}` : "";
+  $("modal").classList.remove("skrito");
+}
+function modalOkvir(t) {
+  const m = model(), o = obrazi[modalI], p = povprecjeSkupine("vsi");
+  const oblika = o.tocke.map(([x, y], j) => [x + t * (p.oblika[j][0] - x), y + t * (p.oblika[j][1] - y)]);
+  const a = up.upogni(o.tex, o.tocke, oblika, m.tri);
+  const tex = up.tekstura(p.piksli);
+  const b = up.upogni(tex, p.oblika, oblika, m.tri);
+  up.pobrisi(tex);
+  for (let k = 0; k < a.length; k++) a[k] = (1 - t) * a[k] + t * b[k];
+  narisi($("modalMorph"), a);
+  $("modalT").textContent = `${Math.round(t * 100)} %`;
+}
+$("modalDrsnik").oninput = (e) => modalOkvir(+e.target.value / 100);
+$("modalZapri").onclick = () => $("modal").classList.add("skrito");
+$("modal").onclick = (e) => { if (e.target.id === "modal") $("modal").classList.add("skrito"); };
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("modal").classList.add("skrito"); });
+
+// ── Analiza: PCA, razdalje ────────────────────────────────────────────────
+const R = 150, D = R * R * 3;
+let maska = null;
+function izracunajMasko(oblika) {
+  const c = document.createElement("canvas"); c.width = c.height = R;
+  const g = c.getContext("2d");
+  g.filter = "blur(5px)";
+  g.fillStyle = "#fff"; g.beginPath();
+  IDX_OVAL.forEach((i, k) => { const [x, y] = oblika[i]; k ? g.lineTo(x / 2, y / 2) : g.moveTo(x / 2, y / 2); });
+  g.closePath(); g.fill();
+  const d = g.getImageData(0, 0, R, R).data, m = new Float32Array(R * R);
+  for (let i = 0; i < R * R; i++) m[i] = d[i * 4 + 3] / 255;
+  return m;
+}
+function jacobi(A, n) {
+  const V = new Float64Array(n * n); for (let i = 0; i < n; i++) V[i * n + i] = 1;
+  let skupaj = 0; for (let i = 0; i < n * n; i++) skupaj += A[i] * A[i];
+  for (let sweep = 0; sweep < 60; sweep++) {
+    let izven = 0;
+    for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) izven += A[p * n + q] ** 2;
+    if (izven < 1e-22 * skupaj) break;
+    for (let p = 0; p < n - 1; p++) for (let q = p + 1; q < n; q++) {
+      const apq = A[p * n + q];
+      if (Math.abs(apq) < 1e-300) continue;
+      const th = (A[q * n + q] - A[p * n + p]) / (2 * apq);
+      const t = Math.sign(th || 1) / (Math.abs(th) + Math.sqrt(th * th + 1));
+      const c = 1 / Math.sqrt(t * t + 1), s = t * c;
+      for (let k = 0; k < n; k++) { const a = A[k * n + p], b = A[k * n + q]; A[k * n + p] = c * a - s * b; A[k * n + q] = s * a + c * b; }
+      for (let k = 0; k < n; k++) { const a = A[p * n + k], b = A[q * n + k]; A[p * n + k] = c * a - s * b; A[q * n + k] = s * a + c * b; }
+      for (let k = 0; k < n; k++) { const a = V[k * n + p], b = V[k * n + q]; V[k * n + p] = c * a - s * b; V[k * n + q] = s * a + c * b; }
+    }
+  }
+  const red = [...Array(n).keys()].sort((a, b) => A[b * n + b] - A[a * n + a]);
+  return { vrednosti: red.map((i) => Math.max(0, A[i * n + i])), vektorji: red.map((k) => Float64Array.from({ length: n }, (_, i) => V[i * n + k])) };
+}
+function analiza() {
+  const m = model(); if (!m || obrazi.length < 2) return null;
+  if (m.an) return m.an;
+  const n = obrazi.length;
+  maska = izracunajMasko(m.oblika);
+  // podatkovna matrika: obrazi na skupni obliki, 150×150 RGB, maskirani
+  const X = new Float32Array(n * D), mu = new Float32Array(D);
+  obrazi.forEach((o, i) => {
+    const w = upMali.upogni(o.texMali, o.tocke, m.oblika, m.tri);
+    for (let p = 0; p < R * R; p++) {
+      const a = maska[p];
+      for (let c = 0; c < 3; c++) { const v = (w[p * 4 + c] / 255) * a + 0.5 * (1 - a); X[i * D + p * 3 + c] = v; mu[p * 3 + c] += v / n; }
+    }
+  });
+  for (let i = 0; i < n; i++) for (let k = 0; k < D; k++) X[i * D + k] -= mu[k];
+  const G = new Float64Array(n * n);
+  for (let i = 0; i < n; i++) for (let j = i; j < n; j++) {
+    let s = 0; const a = i * D, b = j * D;
+    for (let k = 0; k < D; k++) s += X[a + k] * X[b + k];
+    G[i * n + j] = G[j * n + i] = s;
+  }
+  const Gk = G.slice();
+  const { vrednosti, vektorji } = jacobi(Gk, n);
+  const skupnaVar = vrednosti.reduce((a, b) => a + b, 0) || 1;
+  const K = Math.min(n - 1, 40);
+  const U = [];
+  for (let k = 0; k < K; k++) {
+    const u = new Float32Array(D), v = vektorji[k];
+    for (let i = 0; i < n; i++) { const c = v[i]; if (!c) continue; const a = i * D; for (let d = 0; d < D; d++) u[d] += c * X[a + d]; }
+    let nr = 0; for (let d = 0; d < D; d++) nr += u[d] * u[d]; nr = Math.sqrt(nr) || 1;
+    for (let d = 0; d < D; d++) u[d] /= nr;
+    U.push(u);
+  }
+  // razdalje: videz (iz Gramove matrike) + oblika
+  const oblikaVek = obrazi.map((o) => o.tocke.flatMap(([x, y], j) => [x - m.oblika[j][0], y - m.oblika[j][1]]));
+  const dA = [], dS = [];
+  for (let i = 0; i < n; i++) { dA.push(Math.sqrt(Math.max(0, G[i * n + i]))); dS.push(Math.hypot(...oblikaVek[i])); }
+  const povpr = (a) => a.reduce((x, y) => x + y, 0) / a.length || 1;
+  const mA = povpr(dA), mS = povpr(dS);
+  const dK = dA.map((a, i) => (a / mA + dS[i] / mS) / 2);
+  const pA = new Float64Array(n * n), pS = new Float64Array(n * n);
+  let sA = 0, sS = 0, st = 0;
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+    const a = Math.sqrt(Math.max(0, G[i * n + i] + G[j * n + j] - 2 * G[i * n + j]));
+    let s = 0; for (let k = 0; k < oblikaVek[i].length; k++) s += (oblikaVek[i][k] - oblikaVek[j][k]) ** 2;
+    s = Math.sqrt(s);
+    pA[i * n + j] = pA[j * n + i] = a; pS[i * n + j] = pS[j * n + i] = s; sA += a; sS += s; st++;
+  }
+  const par = new Float64Array(n * n);
+  for (let k = 0; k < n * n; k++) par[k] = (pA[k] / (sA / st || 1) + pS[k] / (sS / st || 1)) / 2;
+  const vrstni = [...Array(n).keys()].sort((a, b) => dK[a] - dK[b]);
+  m.an = { n, X, mu, G, vrednosti, vektorji, skupnaVar, U, K, dK, par, vrstni };
+  return m.an;
+}
+function vecVPiksle(v) {
+  const out = new Uint8ClampedArray(R * R * 4);
+  for (let p = 0; p < R * R; p++) { out[p * 4] = v[p * 3] * 255; out[p * 4 + 1] = v[p * 3 + 1] * 255; out[p * 4 + 2] = v[p * 3 + 2] * 255; out[p * 4 + 3] = 255; }
+  return out;
+}
+function kombinacija(an, koef) { // koef: [[k, utež]]
+  const v = Float32Array.from(an.mu);
+  for (const [k, a] of koef) { if (!a) continue; const u = an.U[k]; for (let d = 0; d < D; d++) v[d] += a * u[d]; }
+  return vecVPiksle(v);
+}
+
+// Podobnost
+IZRIS.podobnost = () => {
+  const an = analiza();
+  if (!an) { $("grafRazdalje").innerHTML = ""; $("dvojcki").innerHTML = `<div class="prazno">Potrebujemo vsaj 2 obraza.</div>`; $("rangiranje").innerHTML = ""; return; }
+  histogram($("grafRazdalje"), an.dK, "razdalja od povprečja (1 = povprečna)");
+  const pari = [];
+  for (let i = 0; i < an.n; i++) for (let j = i + 1; j < an.n; j++) pari.push([an.par[i * an.n + j], i, j]);
+  pari.sort((a, b) => a[0] - b[0]);
+  const dv = $("dvojcki"); dv.innerHTML = "";
+  for (const [d, i, j] of pari.slice(0, 3)) {
+    const vr = document.createElement("div"); vr.className = "par";
+    const c = document.createElement("canvas");
+    narisi(c, povprecjeDveh(i, j));
+    vr.innerHTML = `<img src="${obrazi[i].src}" class="rob ${obrazi[i].skupina}">`;
+    vr.append(c);
+    vr.insertAdjacentHTML("beforeend", `<img src="${obrazi[j].src}" class="rob ${obrazi[j].skupina}">`);
+    dv.append(vr);
+    dv.insertAdjacentHTML("beforeend", `<div class="muted" style="font-size:.85rem;margin:-6px 0 6px">razdalja ${d.toFixed(2)} · na sredini njuno povprečje</div>`);
+  }
+  $("rangiranje").innerHTML = an.vrstni.map((i, r) =>
+    `<figure><img src="${obrazi[i].src}" class="rob ${obrazi[i].skupina}">${r + 1}. · ${an.dK[i].toFixed(2)}</figure>`).join("");
+};
+function povprecjeDveh(i, j) {
+  const m = model(), a = obrazi[i], b = obrazi[j];
+  const oblika = a.tocke.map(([x, y], k) => [(x + b.tocke[k][0]) / 2, (y + b.tocke[k][1]) / 2]);
+  const A = up.upogni(a.tex, a.tocke, oblika, m.tri), B = up.upogni(b.tex, b.tocke, oblika, m.tri);
+  for (let k = 0; k < A.length; k++) A[k] = (A[k] + B[k]) / 2;
+  return A;
+}
+
+// Lastni obrazi
+let drsnikiVred = [0, 0, 0, 0, 0], rekI = 0;
+IZRIS.eigen = () => {
+  const an = analiza(), em = $("eigenMreza");
+  if (!an || an.K < 1) { em.innerHTML = `<div class="prazno">Potrebujemo vsaj 3 obraze.</div>`; $("grafScree").innerHTML = ""; return; }
+  em.innerHTML = "";
+  const sd = (k) => Math.sqrt(an.vrednosti[k] / an.n);
+  for (let k = 0; k < Math.min(6, an.K); k++) {
+    const f = document.createElement("figure");
+    const d = document.createElement("div"); d.className = "dvojica";
+    for (const z of [-2, 2]) { const c = document.createElement("canvas"); narisi(c, kombinacija(an, [[k, z * sd(k)]]), R); d.append(c); }
+    f.append(d);
+    f.insertAdjacentHTML("beforeend", `<figcaption>PC${k + 1} · ${(100 * an.vrednosti[k] / an.skupnaVar).toFixed(1)} % variance</figcaption>`);
+    em.append(f);
+  }
+  const L = Math.min(15, an.K);
+  let kum = 0;
+  stolpicniGraf($("grafScree"), {
+    oznake: [...Array(L).keys()].map((k) => "PC" + (k + 1)),
+    vrednosti: [...Array(L).keys()].map((k) => 100 * an.vrednosti[k] / an.skupnaVar),
+    kumulativa: [...Array(L).keys()].map((k) => (kum += 100 * an.vrednosti[k] / an.skupnaVar)),
+    oznakaY: "% variance",
+  });
+  // drsniki
+  const dr = $("drsniki"); dr.innerHTML = "";
+  const st = Math.min(5, an.K);
+  drsnikiVred = drsnikiVred.slice(0, 5);
+  for (let k = 0; k < st; k++) {
+    const l = document.createElement("label");
+    l.innerHTML = `<span>PC${k + 1}</span><input type="range" min="-30" max="30" value="${drsnikiVred[k] * 10}"><span class="muted">${drsnikiVred[k].toFixed(1)}σ</span>`;
+    l.querySelector("input").oninput = (e) => { drsnikiVred[k] = e.target.value / 10; l.lastChild.textContent = drsnikiVred[k].toFixed(1) + "σ"; sestavi(); };
+    dr.append(l);
+  }
+  sestavi();
+  rekI = Math.min(rekI, an.n - 1);
+  $("rekK").max = an.K; if (+$("rekK").value > an.K) $("rekK").value = an.K;
+  $("rekGalerija").innerHTML = obrazi.map((o, i) => `<img src="${o.src}" data-i="${i}" class="${i === rekI ? "izbran" : ""}" alt="">`).join("");
+  rekonstruiraj();
+};
+function sestavi() {
+  const an = analiza(); if (!an) return;
+  narisi($("sestavljen"), kombinacija(an, drsnikiVred.slice(0, an.K).map((a, k) => [k, a * Math.sqrt(an.vrednosti[k] / an.n)])), R);
+}
+$("ponastaviDrsnike").onclick = () => { drsnikiVred = [0, 0, 0, 0, 0]; IZRIS.eigen(); };
+function rekonstruiraj() {
+  const an = analiza(); if (!an) return;
+  const k = +$("rekK").value, xi = an.X.subarray(rekI * D, rekI * D + D);
+  const koef = [];
+  for (let j = 0; j < k; j++) { const u = an.U[j]; let s = 0; for (let d = 0; d < D; d++) s += xi[d] * u[d]; koef.push([j, s]); }
+  narisi($("rekSlika"), kombinacija(an, koef), R);
+  const orig = Float32Array.from(an.mu); for (let d = 0; d < D; d++) orig[d] += xi[d];
+  narisi($("rekOriginal"), vecVPiksle(orig), R);
+  const pojasn = an.vrednosti.slice(0, k).reduce((a, b) => a + b, 0) / an.skupnaVar;
+  $("rekOpis").textContent = `k = ${k} ${k === 0 ? "(samo povprečje)" : `komponent · ${(100 * pojasn).toFixed(0)} % variance`}`;
+}
+$("rekK").oninput = rekonstruiraj;
+$("rekGalerija").onclick = (e) => {
+  const im = e.target.closest("img[data-i]"); if (!im) return;
+  rekI = +im.dataset.i;
+  $("rekGalerija").querySelectorAll("img").forEach((x) => x.classList.toggle("izbran", x === im));
+  rekonstruiraj();
+};
+
+// Zemljevid (t-SNE / PCA)
+let nacinZem = "tsne";
+$("zemTSNE").onclick = () => { nacinZem = "tsne"; $("zemTSNE").classList.add("glavni"); $("zemPCA").classList.remove("glavni"); ustaviAnimacije(); IZRIS.zemljevid(); };
+$("zemPCA").onclick = () => { nacinZem = "pca"; $("zemPCA").classList.add("glavni"); $("zemTSNE").classList.remove("glavni"); ustaviAnimacije(); IZRIS.zemljevid(); };
+IZRIS.zemljevid = () => {
+  const an = analiza(), z = $("zemljevid");
+  z.innerHTML = "";
+  if (!an || an.n < 3) { z.innerHTML = `<div class="prazno" style="margin:20px">Potrebujemo vsaj 3 obraze.</div>`; return; }
+  const slike = obrazi.map((o) => {
+    const im = document.createElement("img"); im.src = o.src; im.className = o.skupina; z.append(im); return im;
+  });
+  const postavi = (Y) => {
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const [x, y] of Y) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    const pad = 44, W = z.clientWidth - 2 * pad, H = z.clientHeight - 2 * pad;
+    Y.forEach(([x, y], i) => {
+      slike[i].style.left = pad + (x1 > x0 ? (x - x0) / (x1 - x0) : 0.5) * W + "px";
+      slike[i].style.top = pad + (y1 > y0 ? (y - y0) / (y1 - y0) : 0.5) * H + "px";
+    });
+  };
+  if (nacinZem === "pca") {
+    postavi(obrazi.map((_, i) => [an.vektorji[0][i] * Math.sqrt(an.vrednosti[0]), -(an.vektorji[1]?.[i] || 0) * Math.sqrt(an.vrednosti[1] || 0)]));
+    return;
+  }
+  const ts = new TSNE(an.par, an.n);
+  let ziv = true;
+  const korak = () => {
+    if (!ziv) return;
+    for (let k = 0; k < 8; k++) ts.korak();
+    postavi(ts.Y);
+    if (ts.it < 900) requestAnimationFrame(korak);
+  };
+  animacije.push(() => { ziv = false; });
+  requestAnimationFrame(korak);
+};
+class TSNE {
+  constructor(Dm, n) {
+    this.n = n; this.it = 0;
+    const perp = Math.max(2, Math.min(25, (n - 1) / 3)), H = Math.log(perp);
+    const P = new Float64Array(n * n);
+    for (let i = 0; i < n; i++) {
+      let beta = 1, lo = -Infinity, hi = Infinity;
+      for (let t = 0; t < 60; t++) {
+        let sum = 0, sumDP = 0;
+        for (let j = 0; j < n; j++) { if (j === i) continue; const d = Dm[i * n + j] ** 2; const p = Math.exp(-d * beta); P[i * n + j] = p; sum += p; sumDP += d * p; }
+        sum = sum || 1e-12;
+        const Hc = Math.log(sum) + beta * sumDP / sum;
+        for (let j = 0; j < n; j++) P[i * n + j] /= sum;
+        if (Math.abs(Hc - H) < 1e-5) break;
+        if (Hc > H) { lo = beta; beta = hi === Infinity ? beta * 2 : (beta + hi) / 2; }
+        else { hi = beta; beta = lo === -Infinity ? beta / 2 : (beta + lo) / 2; }
+      }
+    }
+    this.P = new Float64Array(n * n);
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) this.P[i * n + j] = Math.max((P[i * n + j] + P[j * n + i]) / (2 * n), 1e-100);
+    this.Y = Array.from({ length: n }, () => [Math.random() * 1e-2, Math.random() * 1e-2]);
+    this.g = Array.from({ length: n }, () => [1, 1]);
+    this.s = Array.from({ length: n }, () => [0, 0]);
+  }
+  korak() {
+    const { n, Y, P } = this; this.it++;
+    const ex = this.it < 120 ? 4 : 1, mom = this.it < 250 ? 0.5 : 0.8, lr = 10;
+    const Q = new Float64Array(n * n); let qs = 0;
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      const dx = Y[i][0] - Y[j][0], dy = Y[i][1] - Y[j][1], q = 1 / (1 + dx * dx + dy * dy);
+      Q[i * n + j] = Q[j * n + i] = q; qs += 2 * q;
+    }
+    for (let i = 0; i < n; i++) {
+      let gx = 0, gy = 0;
+      for (let j = 0; j < n; j++) {
+        if (i === j) continue;
+        const q = Q[i * n + j], m = 4 * (ex * P[i * n + j] - q / qs) * q;
+        gx += m * (Y[i][0] - Y[j][0]); gy += m * (Y[i][1] - Y[j][1]);
+      }
+      for (const [d, gr] of [[0, gx], [1, gy]]) {
+        this.g[i][d] = Math.sign(gr) === Math.sign(this.s[i][d]) ? this.g[i][d] * 0.8 : this.g[i][d] + 0.2;
+        this.g[i][d] = Math.max(this.g[i][d], 0.01);
+        this.s[i][d] = mom * this.s[i][d] - lr * this.g[i][d] * gr;
+        Y[i][d] += this.s[i][d];
+      }
+    }
+    for (const d of [0, 1]) { const m = Y.reduce((a, y) => a + y[d], 0) / n; Y.forEach((y) => (y[d] -= m)); }
+  }
+}
+
+// ── Hierarhično razvrščanje ───────────────────────────────────────────────
+function hierarhija(idx, metoda = "ward") {
+  const an = analiza(); if (!an || idx.length < 2) return null;
+  const N = an.n, n = idx.length, M = 2 * n;
+  const Dm = new Float64Array(M * M);
+  for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) {
+    const d = an.par[idx[a] * N + idx[b]];
+    Dm[a * M + b] = metoda === "ward" ? d * d : d;
+  }
+  const vozli = idx.map((g, i) => ({ list: true, g, clani: [g], h: 0, vel: 1 }));
+  let akt = vozli.map((_, i) => i);
+  while (akt.length > 1) {
+    let best = Infinity, A = -1, B = -1;
+    for (let x = 0; x < akt.length; x++) for (let y = x + 1; y < akt.length; y++) {
+      const v = Dm[akt[x] * M + akt[y]]; if (v < best) { best = v; A = akt[x]; B = akt[y]; }
+    }
+    const na = vozli[A].vel, nb = vozli[B].vel, id = vozli.length;
+    vozli.push({ levo: A, desno: B, h: metoda === "ward" ? Math.sqrt(Math.max(0, best)) : best, vel: na + nb, clani: vozli[A].clani.concat(vozli[B].clani) });
+    akt = akt.filter((k) => k !== A && k !== B);
+    for (const k of akt) {
+      const nk = vozli[k].vel, dA = Dm[k * M + A], dB = Dm[k * M + B];
+      let v;
+      if (metoda === "ward") v = ((na + nk) * dA + (nb + nk) * dB - nk * best) / (na + nb + nk);
+      else if (metoda === "average") v = (na * dA + nb * dB) / (na + nb);
+      else if (metoda === "complete") v = Math.max(dA, dB);
+      else v = Math.min(dA, dB);
+      Dm[k * M + id] = Dm[id * M + k] = v;
+    }
+    akt.push(id);
+  }
+  const koren = vozli.length - 1;
+  const red = [];
+  const dfs = (v) => { const o = vozli[v]; if (o.list) red.push(v); else { dfs(o.levo); dfs(o.desno); } };
+  dfs(koren);
+  return { vozli, koren, red, listi: red.map((v) => vozli[v].g) };
+}
+function prerezi(H, k) {
+  let gruce = [H.koren];
+  const razcepi = [];
+  while (gruce.length < k) {
+    let naj = -1;
+    for (const v of gruce) if (!H.vozli[v].list && (naj < 0 || H.vozli[v].h > H.vozli[naj].h)) naj = v;
+    if (naj < 0) break;
+    razcepi.push(H.vozli[naj].h);
+    gruce = gruce.filter((v) => v !== naj).concat([H.vozli[naj].levo, H.vozli[naj].desno]);
+  }
+  // urejeno po položaju v drevesu
+  const poz = new Map(H.red.map((v, i) => [H.vozli[v].g, i]));
+  gruce.sort((a, b) => poz.get(H.vozli[a].clani[0]) - poz.get(H.vozli[b].clani[0]));
+  const maxNotri = Math.max(0, ...gruce.map((v) => H.vozli[v].h));
+  const rez = razcepi.length ? (Math.min(...razcepi) + maxNotri) / 2 : null;
+  return { gruce, rez };
+}
+const BARVE_GRUC = ["#4fb3bd", "#f0a24a", "#a78bfa", "#ef6f6c", "#7bc96f", "#e6c94c", "#5aa9e6", "#d97bb6"];
+function izberiGumb(vsebnik, cb) {
+  vsebnik.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-g]"); if (!b) return;
+    [...vsebnik.querySelectorAll("button[data-g]")].forEach((x) => x.classList.toggle("glavni", x === b));
+    cb(b.dataset.g);
+  });
+}
+
+// Matrika parov
+let matSk = "z", matRed = [];
+izberiGumb($("matrikaSkupina"), (g) => { matSk = g; ustaviAnimacije(); IZRIS.matrika(); });
+IZRIS.matrika = () => {
+  const c = $("matrika"), st = $("matrikaStatus");
+  let idx = indeksi(matSk);
+  if (idx.length < 2) { c.width = c.height = 10; c.getContext("2d").clearRect(0, 0, 10, 10); st.textContent = "Potrebujemo vsaj 2 obraza v tej skupini."; return; }
+  const H = hierarhija(idx); idx = H ? H.listi : idx;
+  const MAKS = 60;
+  const prevec = idx.length > MAKS; if (prevec) idx = idx.slice(0, MAKS);
+  matRed = idx;
+  const n = idx.length, cel = Math.max(40, Math.min(120, Math.floor(3000 / (n + 1))));
+  c.width = c.height = (n + 1) * cel;
+  const g = c.getContext("2d");
+  g.fillStyle = getComputedStyle(document.body).getPropertyValue("--panel2"); g.fillRect(0, 0, c.width, c.height);
+  g.fillStyle = getComputedStyle(document.body).getPropertyValue("--bg"); g.fillRect(0, 0, c.width, cel); g.fillRect(0, 0, cel, c.height);
+  g.translate(cel, cel);
+  idx.forEach((o, i) => {
+    g.drawImage(obrazi[o].img, i * cel + 1, i * cel + 1, cel - 2, cel - 2);
+    g.drawImage(obrazi[o].img, i * cel + 3, -cel + 3, cel - 6, cel - 6);
+    g.drawImage(obrazi[o].img, -cel + 3, i * cel + 3, cel - 6, cel - 6);
+  });
+  const pari = []; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) pari.push([i, j]);
+  const m = model(), tmp = document.createElement("canvas");
+  let k = 0, ziv = true;
+  const korak = () => {
+    if (!ziv) return;
+    const t0 = performance.now();
+    while (k < pari.length && performance.now() - t0 < 30) {
+      const [i, j] = pari[k++], a = obrazi[idx[i]], b = obrazi[idx[j]];
+      const oblika = a.tocke.map(([x, y], q) => [(x + b.tocke[q][0]) / 2, (y + b.tocke[q][1]) / 2]);
+      const A = upMali.upogni(a.texMali, a.tocke, oblika, m.tri), B = upMali.upogni(b.texMali, b.tocke, oblika, m.tri);
+      for (let q = 0; q < A.length; q++) A[q] = (A[q] + B[q]) >> 1;
+      narisi(tmp, A, 150);
+      g.drawImage(tmp, j * cel + 1, i * cel + 1, cel - 2, cel - 2);
+      g.drawImage(tmp, i * cel + 1, j * cel + 1, cel - 2, cel - 2);
+    }
+    st.textContent = (k < pari.length ? `računam ${k}/${pari.length} parov …` : `${n} obrazov, ${pari.length} parov`) + (prevec ? ` (prikazanih prvih ${MAKS})` : "");
+    if (k < pari.length) requestAnimationFrame(korak);
+  };
+  animacije.push(() => { ziv = false; });
+  requestAnimationFrame(korak);
+};
+$("matrika").onclick = (e) => {
+  const c = $("matrika"), r = c.getBoundingClientRect(), n = matRed.length; if (!n) return;
+  const j = Math.floor((e.clientX - r.left) / r.width * (n + 1)) - 1, i = Math.floor((e.clientY - r.top) / r.height * (n + 1)) - 1;
+  if (i < 0 || j < 0 || i >= n || j >= n) return;
+  const out = $("matrikaPovecava");
+  for (const [id, k] of [["matrikaA", i], ["matrikaB", j]]) { const cv = $(id); cv.width = cv.height = S; cv.getContext("2d").drawImage(obrazi[matRed[k]].img, 0, 0, S, S); }
+  if (i === j) { out.width = out.height = S; out.getContext("2d").drawImage(obrazi[matRed[i]].img, 0, 0, S, S); $("matrikaOpis").textContent = "izvirni obraz"; }
+  else {
+    narisi(out, povprecjeDveh(matRed[i], matRed[j]));
+    const an = analiza(); const d = an ? an.par[matRed[i] * an.n + matRed[j]] : null;
+    $("matrikaOpis").textContent = "povprečje para" + (d != null ? ` · razdalja ${d.toFixed(2)}` : "");
+  }
+};
+
+// Dendrogram
+let dSk = "z";
+izberiGumb($("dendroSkupina"), (g) => { dSk = g; IZRIS.dendrogram(); });
+$("dendroMetoda").onchange = () => IZRIS.dendrogram();
+$("dendroKDrsnik").oninput = (e) => { $("dendroK").textContent = e.target.value; IZRIS.dendrogram(); };
+IZRIS.dendrogram = () => {
+  const svg = $("dendro"), gr = $("gruce");
+  const idx = indeksi(dSk);
+  if (idx.length < 3) { svg.innerHTML = `<text x="10" y="30">Potrebujemo vsaj 3 obraze v tej skupini.</text>`; svg.setAttribute("viewBox", "0 0 400 50"); gr.innerHTML = ""; return; }
+  const H = hierarhija(idx, $("dendroMetoda").value);
+  const n = idx.length, kMax = Math.min(8, n);
+  const kd = $("dendroKDrsnik"); kd.max = kMax; if (+kd.value > kMax) kd.value = kMax;
+  const k = +kd.value; $("dendroK").textContent = k;
+  const { gruce, rez } = prerezi(H, k);
+  const barvaG = new Map(); gruce.forEach((v, c) => H.vozli[v].clani.forEach((g) => barvaG.set(g, BARVE_GRUC[c % 8])));
+  const sirina = Math.max(svg.parentElement.clientWidth - 40, 300);
+  const lw = Math.max(34, Math.min(90, (sirina - 50) / n)), sl = Math.min(lw - 4, 72);
+  const W = 50 + n * lw, Hd = 300, top = 16, Ht = Hd + 14 + sl;
+  const hmax = H.vozli[H.koren].h || 1;
+  const sy = (h) => top + (1 - h / hmax) * (Hd - top);
+  const x = new Map();
+  H.red.forEach((v, i) => x.set(v, 50 + i * lw + lw / 2));
+  let o = `<line class="os" x1="50" x2="50" y1="${top}" y2="${Hd}"/><text transform="translate(14 ${Hd / 2}) rotate(-90)" text-anchor="middle">razdalja združevanja</text>`;
+  const barvaVozla = (v) => { const cl = H.vozli[v].clani, b = barvaG.get(cl[0]); return cl.every((g) => barvaG.get(g) === b) ? b : "var(--muted)"; };
+  const pozX = (v) => { if (x.has(v)) return x.get(v); const z = H.vozli[v]; const r = (pozX(z.levo) + pozX(z.desno)) / 2; x.set(v, r); return r; };
+  for (let v = n; v < H.vozli.length; v++) {
+    const z = H.vozli[v], xl = pozX(z.levo), xr = pozX(z.desno), y = sy(z.h);
+    const yl = sy(H.vozli[z.levo].h), yr = sy(H.vozli[z.desno].h), b = barvaVozla(v);
+    o += `<path d="M${xl} ${yl}V${y}H${xr}V${yr}" fill="none" stroke="${b}" stroke-width="2"/>`;
+  }
+  if (rez != null) o += `<line x1="50" x2="${W}" y1="${sy(rez)}" y2="${sy(rez)}" stroke="var(--ink)" stroke-dasharray="6 5" opacity=".6"/><text x="${W - 4}" y="${sy(rez) - 6}" text-anchor="end">prerez → ${k} ${k === 1 ? "skupina" : k === 2 ? "skupini" : k < 5 ? "skupine" : "skupin"}</text>`;
+  H.red.forEach((v, i) => {
+    const g = H.vozli[v].g, xx = 50 + i * lw + (lw - sl) / 2;
+    o += `<image href="${obrazi[g].src}" x="${xx}" y="${Hd + 10}" width="${sl}" height="${sl}"/><rect x="${xx}" y="${Hd + 10}" width="${sl}" height="${sl}" fill="none" stroke="${barvaG.get(g)}" stroke-width="3" rx="4"/>`;
+  });
+  svg.setAttribute("viewBox", `0 0 ${W} ${Ht + 4}`);
+  svg.style.width = W + "px"; svg.style.minWidth = W + "px";
+  svg.innerHTML = o;
+  gr.innerHTML = "";
+  gruce.forEach((v, c) => {
+    const p = povprecjeIndeksov(H.vozli[v].clani);
+    const f = document.createElement("figure"); f.className = "plosca"; f.style.margin = 0; f.style.borderColor = BARVE_GRUC[c % 8]; f.style.borderWidth = "2px";
+    const cv = document.createElement("canvas"); cv.className = "obraz"; narisi(cv, p.piksli);
+    f.append(cv);
+    f.insertAdjacentHTML("beforeend", `<figcaption class="oznaka"><b style="color:${BARVE_GRUC[c % 8]}">Skupina ${c + 1}</b><span class="muted">n = ${p.n}</span></figcaption>`);
+    gr.append(f);
+  });
+};
+
+// ── Vzorci ────────────────────────────────────────────────────────────────
+let vzSk = "vsi", vzSeme = 1;
+izberiGumb($("vzorciSkupina"), (g) => { vzSk = g; IZRIS.vzorci(); });
+$("vzorciNovi").onclick = () => { vzSeme++; IZRIS.vzorci(); };
+$("vzorciADrsnik").oninput = () => IZRIS.vzorci();
+$("vzorciBDrsnik").oninput = () => IZRIS.vzorci();
+function nakljucnaPodmnozica(idx, n) {
+  const a = idx.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a.slice(0, n);
+}
+IZRIS.vzorci = () => {
+  const idx = indeksi(vzSk), N = idx.length;
+  const st = $("vzorciStatus");
+  if (N < 2) { $("vzorciVrstaA").innerHTML = $("vzorciVrstaB").innerHTML = ""; st.textContent = "Potrebujemo vsaj 2 obraza v tej skupini."; return; }
+  st.textContent = `v skupini je ${N} obrazov`;
+  const dA = $("vzorciADrsnik"), dB = $("vzorciBDrsnik");
+  dA.max = Math.max(1, Math.min(N - 1, 10)); dB.max = N;
+  if (!dA.dataset.init) { dA.value = Math.min(3, +dA.max); dB.value = Math.max(1, Math.min(N, Math.round(N * 0.6))); dA.dataset.init = 1; }
+  if (+dA.value > +dA.max) dA.value = dA.max;
+  const pop = povprecjeIndeksov(idx);
+  for (const [vrsta, drs, ozn, raz] of [["vzorciVrstaA", dA, "vzorciA", "vzorciRazA"], ["vzorciVrstaB", dB, "vzorciB", "vzorciRazB"]]) {
+    const n = +drs.value; $(ozn).textContent = n;
+    const v = $(vrsta); v.innerHTML = "";
+    let vsota = 0;
+    for (let r = 0; r < 6; r++) {
+      const p = povprecjeIndeksov(nakljucnaPodmnozica(idx, n));
+      let d = 0, c = 0;
+      for (let k = 0; k < p.vSkupni.length; k += 8) { if ((k & 3) === 3) continue; d += (p.vSkupni[k] - pop.vSkupni[k]) ** 2; c++; }
+      vsota += Math.sqrt(d / c);
+      const cv = document.createElement("canvas"); narisi(cv, p.piksli); v.append(cv);
+    }
+    const teor = N > 1 ? Math.sqrt((N - n) / (n * (N - 1))) : 0;
+    $(raz).textContent = `povprečna razlika od povprečja celotne skupine: ${(vsota / 6).toFixed(1)} (RMS, 0–255) · teorija: sorazmerna √((N−n)/(n(N−1))) = ${teor.toFixed(2)}`;
+  }
+};
+
+// ── Regresija: obraz kot linearna kombinacija drugih ─────────────────────
+let regSk = "z", regT = null;
+izberiGumb($("regSkupina"), (g) => { regSk = g; regT = null; IZRIS.regresija(); });
+$("regGalerija").onclick = (e) => { const im = e.target.closest("img[data-i]"); if (!im) return; regT = +im.dataset.i; IZRIS.regresija(); };
+$("regKDrsnik").oninput = () => regPrikazi();
+let reg = null;
+function resi(A, b) { // Gauss z delnim pivotiranjem
+  const n = b.length, M = A.map((r, i) => [...r, b[i]]);
+  for (let c = 0; c < n; c++) {
+    let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    [M[c], M[p]] = [M[p], M[c]];
+    const v = M[c][c] || 1e-12;
+    for (let r = c + 1; r < n; r++) { const f = M[r][c] / v; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; }
+  }
+  const x = new Array(n).fill(0);
+  for (let r = n - 1; r >= 0; r--) { let s = M[r][n]; for (let k = r + 1; k < n; k++) s -= M[r][k] * x[k]; x[r] = s / (M[r][r] || 1e-12); }
+  return x;
+}
+function regIzracun(t, kand) {
+  const an = analiza();
+  // samo piksli znotraj obraza (maska > 0.5), surovi vektorji r_i = X_i + mu
+  const dims = []; for (let p = 0; p < R * R; p++) if (maska[p] > 0.5) dims.push(p * 3, p * 3 + 1, p * 3 + 2);
+  const Dn = dims.length, F = [t, ...kand], vek = new Map();
+  for (const i of F) { const v = new Float32Array(Dn); for (let q = 0; q < Dn; q++) v[q] = an.X[i * D + dims[q]] + an.mu[dims[q]]; vek.set(i, v); }
+  const sx = {}, Rc = new Map();
+  for (const i of F) { let s = 0; const v = vek.get(i); for (let q = 0; q < Dn; q++) s += v[q]; sx[i] = s; }
+  const RR = (i, j) => {
+    const k = i < j ? i + "," + j : j + "," + i;
+    if (!Rc.has(k)) { const a = vek.get(i), b = vek.get(j); let s = 0; for (let q = 0; q < Dn; q++) s += a[q] * b[q]; Rc.set(k, s); }
+    return Rc.get(k);
+  };
+  const yy = RR(t, t), sy = sx[t], SST = yy - sy * sy / Dn;
+  const model = (S) => {
+    const A = [[Dn, ...S.map((j) => sx[j])], ...S.map((i) => [sx[i], ...S.map((j) => RR(i, j))])];
+    const tr = A.reduce((a, r, i) => a + r[i], 0) / A.length;
+    A.forEach((r, i) => (r[i] += 1e-10 * tr));
+    const b = [sy, ...S.map((j) => RR(j, t))];
+    const beta = resi(A, b);
+    let bAb = 0; for (let i = 0; i < b.length; i++) for (let j = 0; j < b.length; j++) bAb += beta[i] * A[i][j] * beta[j];
+    const SSE = yy - 2 * beta.reduce((a, v, i) => a + v * b[i], 0) + bAb;
+    return { S, beta, R2: Math.max(0, 1 - SSE / SST) };
+  };
+  const pot = [model([])];
+  const KMAX = Math.min(kand.length, 20);
+  let izbr = [];
+  for (let k = 1; k <= KMAX; k++) {
+    let naj = null;
+    for (const j of kand) { if (izbr.includes(j)) continue; const m = model([...izbr, j]); if (!naj || m.R2 > naj.R2) naj = m; }
+    izbr = naj.S; pot.push(naj);
+  }
+  if (kand.length > KMAX) pot.push(model(kand.slice()));
+  return { t, pot };
+}
+IZRIS.regresija = () => {
+  const idx = indeksi(regSk), an = analiza(), ok = !!an && idx.length >= 3;
+  $("regVsebina").classList.toggle("skrito", !ok); $("regPrazno").classList.toggle("skrito", ok);
+  $("regGalerija").innerHTML = idx.map((i) => `<img src="${obrazi[i].src}" data-i="${i}" class="${i === regT ? "izbran" : ""}" alt="">`).join("");
+  if (!ok) return;
+  if (regT == null || !idx.includes(regT)) regT = idx[0];
+  $("regGalerija").querySelectorAll("img").forEach((x) => x.classList.toggle("izbran", +x.dataset.i === regT));
+  reg = regIzracun(regT, idx.filter((i) => i !== regT));
+  const d = $("regKDrsnik"); d.max = reg.pot.length - 1; d.value = d.max;
+  regPrikazi();
+};
+function regPrikazi() {
+  if (!reg) return;
+  const an = analiza(), k = +$("regKDrsnik").value, m = reg.pot[k];
+  const y = new Float32Array(D), yh = new Float32Array(D).fill(m.beta[0]);
+  for (let d = 0; d < D; d++) y[d] = an.X[reg.t * D + d] + an.mu[d];
+  m.S.forEach((j, q) => { const b = m.beta[q + 1], o = j * D; for (let d = 0; d < D; d++) yh[d] += b * (an.X[o + d] + an.mu[d]); });
+  const ost = new Float32Array(D); for (let d = 0; d < D; d++) ost[d] = 0.5 + 2 * (y[d] - yh[d]);
+  narisi($("regY"), vecVPiksle(y), R); narisi($("regYhat"), vecVPiksle(yh), R); narisi($("regOst"), vecVPiksle(ost), R);
+  $("regK").textContent = k === 0 ? "samo konstanta" : `k = ${m.S.length} ${m.S.length === 1 ? "prediktor" : m.S.length === 2 ? "prediktorja" : m.S.length < 5 ? "prediktorji" : "prediktorjev"}`;
+  $("regR2").textContent = `R² = ${m.R2.toFixed(3)}`;
+  const ut = m.S.map((j, q) => [j, m.beta[q + 1]]).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, 8);
+  const mx = Math.max(1e-9, ...ut.map((u) => Math.abs(u[1])));
+  $("regUtezi").innerHTML = ut.length ? ut.map(([j, b]) => {
+    const w = 50 * Math.abs(b) / mx;
+    return `<div class="utez"><img src="${obrazi[j].src}"><div class="trakU"><i style="left:${b >= 0 ? 50 : 50 - w}%;width:${w}%;background:${b >= 0 ? "var(--acc)" : "var(--z)"}"></i></div><span>${b >= 0 ? "+" : "−"}${Math.abs(b).toFixed(2)}</span></div>`;
+  }).join("") + `<p class="muted" style="font-size:.85rem;margin:6px 0 0">Negativna utež pomeni, da obraz »odštejemo«. Konstanta b₀ = ${m.beta[0].toFixed(2)}.</p>` : `<p class="muted">Ni prediktorjev – napoved je konstanta.</p>`;
+  const xs = reg.pot.map((p) => p.S.length);
+  crtniGraf($("regGraf"), { x: xs, serije: [{ y: reg.pot.map(() => 0), barva: "transparent", ime: "" }, { y: reg.pot.map((p) => p.R2), barva: "var(--acc)", ime: "R²" }], oznakaX: "število prediktorjev", oznakaY: "R²", oznacen: null });
+  const svg = $("regGraf"), cx = svg.querySelectorAll("polyline")[1];
+  if (cx) { const pts = cx.getAttribute("points").split(" ")[k].split(","); svg.insertAdjacentHTML("beforeend", `<circle cx="${pts[0]}" cy="${pts[1]}" r="6" fill="var(--acc)" stroke="var(--panel)" stroke-width="2"/>`); }
+}
+
+// Zaključek
+IZRIS.zakljucek = () => { $("brisanjeStatus").textContent = ""; };
+document.querySelectorAll("[data-prenos]").forEach((b) => b.onclick = () => {
+  const p = povprecjeSkupine(b.dataset.prenos); if (!p) return;
+  const c = document.createElement("canvas"); narisi(c, p.piksli);
+  c.toBlob((blob) => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `povprecni-obraz-${b.dataset.prenos}-${new Date().toISOString().slice(0, 10)}.png`;
+    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
+});
+let potrdiBrisanje = false;
+$("izbrisi").onclick = async () => {
+  const g = $("izbrisi"), st = $("brisanjeStatus");
+  if (lokalno) { pocistiObraze(); st.textContent = "Lokalne slike so odstranjene."; return; }
+  if (!potrdiBrisanje) {
+    potrdiBrisanje = true; g.classList.add("potrdi"); g.textContent = "Klikni še enkrat za dokončen izbris";
+    setTimeout(() => { potrdiBrisanje = false; g.classList.remove("potrdi"); g.textContent = "Izbriši vse selfije te seje"; }, 5000);
+    return;
+  }
+  potrdiBrisanje = false; g.classList.remove("potrdi"); g.textContent = "Izbriši vse selfije te seje";
+  st.textContent = "Brišem …";
+  try {
+    await api(`/rest/v1/prispevki?seja=eq.${encodeURIComponent(seja)}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+    const ostalo = await api(`/rest/v1/prispevki?select=id&seja=eq.${encodeURIComponent(seja)}`);
+    if (ostalo.length) throw new Error(`na strežniku je ostalo še ${ostalo.length} zapisov`);
+    pocistiObraze(); zadnjiCas = null;
+    st.innerHTML = `<b style="color:#59c27e">✓ Vsi selfiji seje ${seja} so izbrisani s strežnika.</b>`;
+    nastaviSejo(novaKoda());
+  } catch (err) { st.textContent = "Brisanje ni uspelo: " + err.message; }
+};
+
+// ── Grafi (SVG) ───────────────────────────────────────────────────────────
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+function osi(svg, w, h, m, x0, x1, y0, y1, oznakaX, oznakaY, tickiX) {
+  const sx = (x) => m.l + (x - x0) / (x1 - x0 || 1) * (w - m.l - m.r);
+  const sy = (y) => h - m.b - (y - y0) / (y1 - y0 || 1) * (h - m.t - m.b);
+  let s = `<line class="os" x1="${m.l}" y1="${h - m.b}" x2="${w - m.r}" y2="${h - m.b}"/><line class="os" x1="${m.l}" y1="${m.t}" x2="${m.l}" y2="${h - m.b}"/>`;
+  const ky = lepiKoraki(y0, y1, 5);
+  for (const v of ky) s += `<line class="os" x1="${m.l}" x2="${w - m.r}" y1="${sy(v)}" y2="${sy(v)}" opacity=".35"/><text x="${m.l - 6}" y="${sy(v) + 4}" text-anchor="end">${+v.toFixed(2)}</text>`;
+  for (const v of tickiX || lepiKoraki(x0, x1, 8)) s += `<text x="${sx(v)}" y="${h - m.b + 16}" text-anchor="middle">${esc(v)}</text>`;
+  s += `<text x="${(m.l + w - m.r) / 2}" y="${h - 4}" text-anchor="middle">${esc(oznakaX)}</text>`;
+  s += `<text transform="translate(14 ${(m.t + h - m.b) / 2}) rotate(-90)" text-anchor="middle">${esc(oznakaY)}</text>`;
+  return { s, sx, sy };
+}
+function lepiKoraki(a, b, n) {
+  const r = b - a || 1, k = Math.pow(10, Math.floor(Math.log10(r / n))), c = [1, 2, 5, 10].map((f) => f * k).find((f) => r / f <= n) || k * 10;
+  const out = []; for (let v = Math.ceil(a / c) * c; v <= b + 1e-9; v += c) out.push(+v.toFixed(10)); return out;
+}
+function crtniGraf(svg, { x, serije, oznakaX, oznakaY, oznacen }) {
+  const w = 640, h = 360, m = { l: 56, r: 16, t: 34, b: 44 };
+  const ymax = Math.max(1e-9, ...serije.flatMap((s) => s.y)) * 1.08;
+  const { s, sx, sy } = osi(svg, w, h, m, x[0], x[x.length - 1], 0, ymax, oznakaX, oznakaY, lepiKoraki(x[0], x[x.length - 1], 8).filter((v) => Number.isInteger(v)));
+  let o = s;
+  serije.forEach((se, k) => {
+    o += `<polyline fill="none" stroke="${se.barva}" stroke-width="${se.crtkano ? 2 : 3}" ${se.crtkano ? 'stroke-dasharray="6 5"' : ""} points="${se.y.map((y, i) => sx(x[i]) + "," + sy(y)).join(" ")}"/>`;
+    o += `<line x1="${m.l + 10 + k * 230}" x2="${m.l + 36 + k * 230}" y1="14" y2="14" stroke="${se.barva}" stroke-width="3" ${se.crtkano ? 'stroke-dasharray="6 5"' : ""}/><text x="${m.l + 42 + k * 230}" y="18">${esc(se.ime)}</text>`;
+  });
+  if (oznacen) { const i = oznacen - 1; o += `<line x1="${sx(oznacen)}" x2="${sx(oznacen)}" y1="${m.t}" y2="${h - m.b}" stroke="var(--ink)" opacity=".3"/><circle cx="${sx(oznacen)}" cy="${sy(serije[1].y[i])}" r="6" fill="var(--acc)" stroke="var(--panel)" stroke-width="2"/>`; }
+  svg.innerHTML = o;
+}
+function histogram(svg, vrednosti, oznakaX) {
+  const w = 560, h = 300, m = { l: 48, r: 14, t: 14, b: 44 };
+  const mx = Math.max(...vrednosti) * 1.02, k = Math.max(5, Math.min(14, Math.round(Math.sqrt(vrednosti.length) * 1.5)));
+  const sir = mx / k, st = new Array(k).fill(0).map(() => ({ m: 0, z: 0, x: 0 }));
+  vrednosti.forEach((v, i) => st[Math.min(k - 1, Math.floor(v / sir))][obrazi[i].skupina]++);
+  const ymax = Math.max(1, ...st.map((b) => b.m + b.z + b.x));
+  const { s, sx, sy } = osi(svg, w, h, m, 0, mx, 0, ymax, oznakaX, "število obrazov");
+  let o = s;
+  st.forEach((b, i) => {
+    let y = 0;
+    for (const g of ["m", "z", "x"]) {
+      if (!b[g]) continue;
+      o += `<rect x="${sx(i * sir) + 1}" width="${sx(sir) - sx(0) - 2}" y="${sy(y + b[g])}" height="${sy(y) - sy(y + b[g])}" fill="var(--${g})"/>`;
+      y += b[g];
+    }
+  });
+  svg.innerHTML = o;
+}
+function stolpicniGraf(svg, { oznake, vrednosti, kumulativa, oznakaY }) {
+  const w = 560, h = 300, m = { l: 48, r: 14, t: 26, b: 44 }, n = vrednosti.length;
+  const { s, sy } = osi(svg, w, h, m, 0, n, 0, 100, "", oznakaY, []);
+  const bw = (w - m.l - m.r) / n;
+  let o = s;
+  vrednosti.forEach((v, i) => {
+    o += `<rect x="${m.l + i * bw + 3}" width="${bw - 6}" y="${sy(v)}" height="${sy(0) - sy(v)}" fill="var(--acc)" rx="2"/>`;
+    o += `<text x="${m.l + i * bw + bw / 2}" y="${h - m.b + 16}" text-anchor="middle">${oznake[i].replace("PC", "")}</text>`;
+  });
+  o += `<polyline fill="none" stroke="var(--ink)" stroke-width="2" points="${kumulativa.map((v, i) => `${m.l + i * bw + bw / 2},${sy(v)}`).join(" ")}"/>`;
+  o += `<text x="${m.l + 6}" y="14">stolpci: posamezna komponenta · črta: skupaj</text>`;
+  o += `<text x="${(m.l + w - m.r) / 2}" y="${h - 4}" text-anchor="middle">glavna komponenta</text>`;
+  svg.innerHTML = o;
+}
+
+// ── Ostalo ────────────────────────────────────────────────────────────────
+$("tema").onclick = () => {
+  const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = t; shrani("po-tema", t);
+};
+if (preberi("po-tema")) document.documentElement.dataset.theme = preberi("po-tema");
+$("celozaslonsko").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+
+// testni vmesnik
+window.__povprecenObraz = { dodajObraz, vstopiLokalno: () => { lokalno = true; vstopi(); }, obrazi };
+
+if (avt) { vstopi(); }
+</script>
+</body>
+</html>
